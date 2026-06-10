@@ -26,10 +26,13 @@ def test_snowball_dsl_examples(yaml_name: str):
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("yaml_name,barrier_type", [
-    ("barrier_up_and_out.yaml", "barrier.up_and_out"),
-    ("barrier_down_and_in.yaml", "barrier.down_and_in"),
-])
+@pytest.mark.parametrize(
+    "yaml_name,barrier_type",
+    [
+        ("barrier_up_and_out.yaml", "barrier.up_and_out"),
+        ("barrier_down_and_in.yaml", "barrier.down_and_in"),
+    ],
+)
 def test_barrier_dsl_examples(yaml_name: str, barrier_type: str):
     path = EXAMPLES_DIR / yaml_name
     spec = load_spec(path)

@@ -9,7 +9,6 @@ from typing import Any
 
 import pandas as pd
 
-from derivkit.core.enums import AssetClass
 from derivkit.data.adapters import commodity, equity
 
 logger = logging.getLogger(__name__)

@@ -59,7 +59,9 @@ class Phoenix(Product):
     ) -> Phoenix:
         maturity = parse_tenor(params.get("maturity", "1y"))
         lock_term = params.get("lock_term", "1m")
-        lock_months = int(parse_tenor(lock_term) * 12) if isinstance(lock_term, str) else int(lock_term)
+        lock_months = (
+            int(parse_tenor(lock_term) * 12) if isinstance(lock_term, str) else int(lock_term)
+        )
         s0 = float(params.get("s0", 100))
         barrier_in = float(params.get("barrier_in", 80))
         return cls(
@@ -69,7 +71,9 @@ class Phoenix(Product):
             coupon=float(params.get("coupon", params.get("coupon_out", 0.02))),
             underlying_id=underlying_id,
             _maturity=maturity,
-            barrier_yield=float(params["barrier_yield"]) if params.get("barrier_yield") is not None else None,
+            barrier_yield=(
+                float(params["barrier_yield"]) if params.get("barrier_yield") is not None else None
+            ),
             lock_term_months=lock_months,
             margin_lvl=float(params.get("margin_lvl", 1.0)),
             parti_in=float(params.get("parti_in", 1.0)),

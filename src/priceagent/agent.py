@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from dataclasses import dataclass, field
@@ -62,12 +61,14 @@ def _llm_settings() -> tuple[str, str | None, str]:
     deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
     api_key = os.environ.get("OPENAI_API_KEY", "").strip() or deepseek_key
     if not api_key:
-        raise EnvironmentError(
+        raise OSError(
             "Set DEEPSEEK_API_KEY or OPENAI_API_KEY in .env "
             "(see .env.example for DeepSeek configuration)"
         )
 
     provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
+    base_url: str | None
+    model: str
     if provider == "deepseek" or (deepseek_key and not os.environ.get("OPENAI_BASE_URL")):
         base_url = os.environ.get("OPENAI_BASE_URL", "https://api.deepseek.com")
         model = os.environ.get("OPENAI_MODEL", os.environ.get("DEEPSEEK_MODEL", "deepseek-chat"))
@@ -82,9 +83,7 @@ def _create_client():
     try:
         from openai import OpenAI
     except ImportError as exc:
-        raise ImportError(
-            "Install LLM extras: pip install -e '.[llm]'"
-        ) from exc
+        raise ImportError("Install LLM extras: pip install -e '.[llm]'") from exc
 
     api_key, base_url, _ = _llm_settings()
     kwargs: dict[str, Any] = {"api_key": api_key}

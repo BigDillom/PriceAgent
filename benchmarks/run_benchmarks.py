@@ -14,15 +14,14 @@ import json
 import statistics
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Callable
 
-from derivkit.core.enums import BarrierType, CallPut
+from derivkit.core.enums import AssetClass, BarrierType, CallPut
 from derivkit.core.rng import set_seed
 from derivkit.data.market_env import MarketEnv, UnderlyingSpec
-from derivkit.core.enums import AssetClass
 from derivkit.data.term_structures import ConstantRate
 from derivkit.data.volmodels import ConstantVol
 from derivkit.pricing.engines.analytic import AnalyticEngine
@@ -82,12 +81,16 @@ def build_cases() -> list[BenchCase]:
     analytic = AnalyticEngine()
     mc = McEngine(n_paths=100_000, seed=42)
 
-    snowball_env = MarketEnv.from_spec({
-        "valuation_date": "2024-01-05",
-        "underlyings": [{"id": "CSI1000", "asset_class": "index", "spot": 100.0}],
-        "rates": [{"id": "CN_RF", "kind": "constant", "value": 0.05}],
-        "vols": [{"id": "CSI1000", "kind": "constant", "value": 0.2, "underlying_id": "CSI1000"}],
-    })
+    snowball_env = MarketEnv.from_spec(
+        {
+            "valuation_date": "2024-01-05",
+            "underlyings": [{"id": "CSI1000", "asset_class": "index", "spot": 100.0}],
+            "rates": [{"id": "CN_RF", "kind": "constant", "value": 0.05}],
+            "vols": [
+                {"id": "CSI1000", "kind": "constant", "value": 0.2, "underlying_id": "CSI1000"}
+            ],
+        }
+    )
     snowball = StandardSnowball.from_params(
         {"s0": 100, "barrier_out": 103, "barrier_in": 80, "coupon_out": 0.113, "maturity": "1y"},
         "CSI1000",
@@ -127,7 +130,8 @@ def build_cases() -> list[BenchCase]:
         BenchCase(
             "snowball_quad",
             lambda: quad.calc_present_value(snowball, snowball_env),
-            lambda: QuadSnowballEngine(n_points=201).calc_present_value(snowball, snowball_env),
+            # Warmup must match n_points=901 or timed runs include one-off JIT compile.
+            lambda: quad.calc_present_value(snowball, snowball_env),
         ),
         BenchCase(
             "barrier_multi",

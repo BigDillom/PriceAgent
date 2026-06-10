@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from typing import Any
+
 import pandas as pd
 
 from derivkit.core.enums import AlignPolicy
@@ -196,9 +197,7 @@ def align_spots_batch(
         if isinstance(spot_cfg, (int, float)):
             spot = float(spot_cfg)
             result.aligned_spots[uid] = spot
-            result.records.append(
-                AlignmentRecord(uid, "literal", spot, spot, None, delta_days=0)
-            )
+            result.records.append(AlignmentRecord(uid, "literal", spot, spot, None, delta_days=0))
             continue
         if spot_cfg.get("source") != "csv":
             raise ValueError(f"Unsupported spot source for {uid}")

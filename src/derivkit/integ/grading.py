@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
-import json
 
 from derivkit.contract.output_contract import PricingResult, validate_result
 
@@ -71,9 +70,7 @@ def grade_result(
             continue
         tol = tolerance.get(field_name, tolerance.get("pv", 1e-2))
         if abs(float(act_val) - float(exp_val)) > tol:
-            errors.append(
-                f"{field_name}: actual={act_val}, expected={exp_val}, tolerance={tol}"
-            )
+            errors.append(f"{field_name}: actual={act_val}, expected={exp_val}, tolerance={tol}")
 
     return GradeReport(passed=not errors, errors=errors, checked_fields=fields)
 

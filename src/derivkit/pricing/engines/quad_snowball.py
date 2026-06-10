@@ -82,7 +82,9 @@ class QuadSnowballEngine(PricingEngine, QuadFftBase):
         self.set_quad_params(r, q, vol)
 
         self.backward_steps = max(round(product.t_step_per_year * maturity), 0)
-        tau_grid = self.backward_steps / product.t_step_per_year if self.backward_steps else maturity
+        tau_grid = (
+            self.backward_steps / product.t_step_per_year if self.backward_steps else maturity
+        )
         self.init_grid(spot, vol, tau_grid)
 
         assert self.ln_s_vec is not None
@@ -149,7 +151,9 @@ class QuadSnowballEngine(PricingEngine, QuadFftBase):
                     float(self.next_paydate[j]),
                     float(self.next_paydate[j] - self.next_diff_obspaydate[j]),
                 )
-                self.v_not_in[self.out_idxs, j] = self.v_knock_in[self.out_idxs, j] = knock_out_payoff
+                self.v_not_in[self.out_idxs, j] = self.v_knock_in[self.out_idxs, j] = (
+                    knock_out_payoff
+                )
 
                 self.next_barrier_in = self._barrier_in_at_obs(j, product.barrier_in)
                 if self.next_barrier_in > 0 and s_vec[0] <= self.next_barrier_in:
@@ -241,7 +245,9 @@ class QuadSnowballEngine(PricingEngine, QuadFftBase):
             self.in_idx = 0
 
         self.out_idxs = np.array(np.where(s_vec >= self.next_barrier_out)[0])
-        self.itm = np.where(s_vec - prod.strike_call > 0, (s_vec - prod.strike_call) * prod.parti_out, 0.0)
+        self.itm = np.where(
+            s_vec - prod.strike_call > 0, (s_vec - prod.strike_call) * prod.parti_out, 0.0
+        )
 
         coupon_t = 1.0 if self.trigger else float(self.pay_dates[-1])
         assert self.v_knock_in is not None and self.v_not_in is not None

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import derivkit as dk
-from derivkit.dsl.loader import load_spec
-
 from priceagent.data_service import DataService
 from priceagent.spec_builder import build_vanilla_spec, normalize_spec
 
@@ -36,7 +35,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "exchange": {"type": "string", "description": "DCE for hog futures"},
                     "lookback_days": {
                         "type": "integer",
-                        "description": "Calendar days of history for Tushare (default 90 ≈ 3 months)",
+                        "description": "Calendar days of Tushare history (default 90)",
                         "default": 90,
                     },
                     "dataset_id": {
@@ -45,18 +44,21 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     },
                     "window": {
                         "type": "integer",
-                        "description": "Rolling return window in trading days; auto-shrinks if too large",
+                        "description": "Rolling return window (trading days); auto-shrinks",
                     },
                     "annualization": {"type": "number", "default": 243},
                     "market_price": {
                         "type": "number",
-                        "description": "Observed option price for implied; omit to auto-fetch from Tushare",
+                        "description": "Option price for implied; omit to auto-fetch from Tushare",
                     },
                     "strike": {"type": "number", "description": "Required for implied vol"},
                     "maturity": {"type": "string", "default": "3m"},
                     "call_put": {"type": "string", "enum": ["call", "put"], "default": "call"},
                     "rate": {"type": "number", "default": 0.025},
-                    "spot": {"type": "number", "description": "Override underlying spot for implied"},
+                    "spot": {
+                        "type": "number",
+                        "description": "Override underlying spot for implied",
+                    },
                     "price_field": {
                         "type": "string",
                         "enum": ["settle", "close"],
@@ -97,7 +99,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "list_market_datasets",
-            "description": "List built-in offline market datasets (CSV) for commodity/equity pricing.",
+            "description": "List built-in offline CSV market datasets.",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
@@ -177,7 +179,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "properties": {
                     "symbol": {
                         "type": "string",
-                        "description": "Contract symbol, e.g. LH2409, LC2409, or full ts_code LH2409.DCE",
+                        "description": "Futures symbol, e.g. LH2409 or LH2409.DCE",
                     },
                     "valuation_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "asset_class": {
@@ -251,8 +253,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "function": {
             "name": "price_from_spec",
             "description": (
-                "Advanced: inline DSL spec. product.type must be vanilla.european (not european_call). "
-                "market must have valuation_date and underlyings as a list with id field."
+                "Advanced inline DSL spec. Use product.type=vanilla.european; "
+                "market needs valuation_date and underlyings[].id."
             ),
             "parameters": {
                 "type": "object",
@@ -433,9 +435,7 @@ class ToolRegistry:
                 }
             ]
         elif method == "historical":
-            spot_info = self.data.get_tushare_spot(
-                valuation_date, symbol=symbol, exchange=exchange
-            )
+            spot_info = self.data.get_tushare_spot(valuation_date, symbol=symbol, exchange=exchange)
             market["underlyings"] = [
                 {
                     "id": spot_info["instrument_id"],
@@ -453,9 +453,7 @@ class ToolRegistry:
                 {"id": symbol, "asset_class": "commodity", "spot": spot},
             ]
         else:
-            spot_info = self.data.get_tushare_spot(
-                valuation_date, symbol=symbol, exchange=exchange
-            )
+            spot_info = self.data.get_tushare_spot(valuation_date, symbol=symbol, exchange=exchange)
             market["underlyings"] = [
                 {"id": symbol, "asset_class": "commodity", "spot": spot_info["spot"]},
             ]

@@ -3,21 +3,21 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 from derivkit.core.enums import (
     AsianAveSubstitution,
+    AssetClass,
     AverageMethod,
     BarrierType,
     CallPut,
-    EngineMethod,
     ExerciseType,
 )
 from derivkit.core.rng import set_seed
 from derivkit.data.market_env import MarketEnv, UnderlyingSpec
-from derivkit.core.enums import AssetClass
 from derivkit.data.term_structures import ConstantRate
 from derivkit.data.volmodels import ConstantVol
 from derivkit.dsl.schema import PricingSpec
@@ -31,7 +31,6 @@ from derivkit.pricing.engines.mc_digital import McDigitalEngine
 from derivkit.pricing.products.asian import AsianOption
 from derivkit.pricing.products.barrier import BarrierOption
 from derivkit.pricing.products.digital import DigitalOption
-from datetime import date
 
 GOLDEN_DIR = Path(__file__).resolve().parents[2] / "src" / "derivkit" / "verify" / "golden"
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import numpy as np
-import pytest
 
 from derivkit.core.enums import BusinessConvention
 from derivkit.data.calendars import Calendar

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
-from scipy import interpolate
 
 from derivkit.core.conventions import discount_factor
 from derivkit.core.enums import Compounding, DayCount

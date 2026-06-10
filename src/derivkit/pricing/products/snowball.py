@@ -87,7 +87,9 @@ class StandardSnowball(Product):
     ) -> StandardSnowball:
         maturity = parse_tenor(params.get("maturity", "1y"))
         lock_term = params.get("lock_term", "3m")
-        lock_months = int(parse_tenor(lock_term) * 12) if isinstance(lock_term, str) else int(lock_term)
+        lock_months = (
+            int(parse_tenor(lock_term) * 12) if isinstance(lock_term, str) else int(lock_term)
+        )
         s0 = float(params.get("s0", 100))
         return cls(
             s0=s0,

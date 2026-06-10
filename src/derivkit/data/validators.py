@@ -45,7 +45,9 @@ class ValidationReport:
     def to_dict(self) -> dict[str, Any]:
         return {
             "passed": self.passed,
-            "issues": [{"level": i.level, "field": i.field, "message": i.message} for i in self.issues],
+            "issues": [
+                {"level": i.level, "field": i.field, "message": i.message} for i in self.issues
+            ],
         }
 
 

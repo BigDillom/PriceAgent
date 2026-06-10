@@ -119,7 +119,11 @@ class QuadFcnEngine(PricingEngine, QuadFftBase):
         return np.array(fracs, dtype=float)
 
     def _terminal_payoff(self, prod: FCN, s_vec: np.ndarray) -> np.ndarray:
-        assert self._barrier_yield is not None and self._barrier_in is not None and self._coupon is not None
+        assert (
+            self._barrier_yield is not None
+            and self._barrier_in is not None
+            and self._coupon is not None
+        )
         return (
             prod.margin_lvl * prod.s0
             + np.where(s_vec > self._barrier_yield[-1], self._coupon[-1] * prod.s0, 0)
@@ -127,6 +131,9 @@ class QuadFcnEngine(PricingEngine, QuadFftBase):
                 s_vec > self._barrier_in[-1],
                 0,
                 prod.parti_in
-                * (-prod.strike_upper + np.where(s_vec > prod.strike_lower, s_vec, prod.strike_lower)),
+                * (
+                    -prod.strike_upper
+                    + np.where(s_vec > prod.strike_lower, s_vec, prod.strike_lower)
+                ),
             )
         )

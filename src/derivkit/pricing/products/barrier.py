@@ -47,7 +47,9 @@ class BarrierOption(Product):
         self.barrier = float(barrier)
         self.rebate = float(rebate)
         self.call_put = CallPut(call_put) if isinstance(call_put, str) else call_put
-        self.barrier_type = BarrierType(barrier_type) if isinstance(barrier_type, str) else barrier_type
+        self.barrier_type = (
+            BarrierType(barrier_type) if isinstance(barrier_type, str) else barrier_type
+        )
         self.updown, self.inout = barrier_components(self.barrier_type)
         self._maturity = parse_tenor(maturity) if isinstance(maturity, str) else float(maturity)
         self.underlying_id = underlying_id
@@ -57,7 +59,9 @@ class BarrierOption(Product):
         if payment_type is None:
             self.payment_type = PaymentType.EXPIRE if self.inout == InOut.IN else PaymentType.HIT
         else:
-            self.payment_type = PaymentType(payment_type) if isinstance(payment_type, str) else payment_type
+            self.payment_type = (
+                PaymentType(payment_type) if isinstance(payment_type, str) else payment_type
+            )
 
     @property
     def maturity(self) -> float:

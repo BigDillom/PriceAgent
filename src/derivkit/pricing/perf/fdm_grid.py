@@ -5,7 +5,7 @@ Adapted from PriceLib (Apache 2.0): pricelib/common/pricing_engine_base/pde_engi
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 from scipy import sparse
@@ -53,7 +53,10 @@ class FdmGrid:
         self.lower = 0.5 * (diffusion_square - drift)
         self.diag = -diffusion_square - c
         self.upper = 0.5 * (diffusion_square + drift)
-        A = sparse.diags((self.lower[1:], self.diag, self.upper[:-1]), (-1, 0, 1), format="csc") * dt
+        A = (
+            sparse.diags((self.lower[1:], self.diag, self.upper[:-1]), (-1, 0, 1), format="csc")
+            * dt
+        )
         self.M1 = self.eye - self._theta * A
         self.M2 = self.eye + (1 - self._theta) * A
 
@@ -61,20 +64,32 @@ class FdmGrid:
         v_vec = self.M2.dot(yv)
         if self.fn_bound is not None:
             v_vec[0] += (
-                self._theta * self.fn_bound[0](self.tv[j])
-                + (1 - self._theta) * self.fn_bound[0](self.tv[j - 1])
-            ) * self.lower[0] * dt
+                (
+                    self._theta * self.fn_bound[0](self.tv[j])
+                    + (1 - self._theta) * self.fn_bound[0](self.tv[j - 1])
+                )
+                * self.lower[0]
+                * dt
+            )
             v_vec[-1] += (
-                self._theta * self.fn_bound[1](self.tv[j])
-                + (1 - self._theta) * self.fn_bound[1](self.tv[j - 1])
-            ) * self.upper[-1] * dt
+                (
+                    self._theta * self.fn_bound[1](self.tv[j])
+                    + (1 - self._theta) * self.fn_bound[1](self.tv[j - 1])
+                )
+                * self.upper[-1]
+                * dt
+            )
         else:
             v_vec[0] += (
-                self._theta * self.v_grid[0, j] + (1 - self._theta) * self.v_grid[0, j - 1]
-            ) * self.lower[0] * dt
+                (self._theta * self.v_grid[0, j] + (1 - self._theta) * self.v_grid[0, j - 1])
+                * self.lower[0]
+                * dt
+            )
             v_vec[-1] += (
-                self._theta * self.v_grid[-1, j] + (1 - self._theta) * self.v_grid[-1, j - 1]
-            ) * self.upper[-1] * dt
+                (self._theta * self.v_grid[-1, j] + (1 - self._theta) * self.v_grid[-1, j - 1])
+                * self.upper[-1]
+                * dt
+            )
         return np.asarray(v_vec)
 
     def evolve(self, j: int, yv: np.ndarray, dt: float) -> np.ndarray:
@@ -92,8 +107,17 @@ class FdmGrid:
             bound_hi_j = self.v_grid[-1, j]
             bound_hi_jm1 = self.v_grid[-1, j - 1]
         return fdm_evolve_step(
-            self.i_vec, a, b, c, dt, self._theta, yv,
-            bound_lo_j, bound_lo_jm1, bound_hi_j, bound_hi_jm1,
+            self.i_vec,
+            a,
+            b,
+            c,
+            dt,
+            self._theta,
+            yv,
+            bound_lo_j,
+            bound_lo_jm1,
+            bound_hi_j,
+            bound_hi_jm1,
         )
 
     def functionize(self, yv: np.ndarray, kind: str = "linear"):

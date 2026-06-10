@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import derivkit as dk
-
 from priceagent.spec_builder import build_vanilla_spec, normalize_spec
 
 

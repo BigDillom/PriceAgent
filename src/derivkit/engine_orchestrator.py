@@ -17,10 +17,10 @@ from derivkit.pricing.engines import create_engine
 from derivkit.pricing.engines.analytic_asian import AnalyticAsianEngine
 from derivkit.pricing.engines.analytic_barrier import AnalyticBarrierEngine
 from derivkit.pricing.engines.analytic_digital import AnalyticDigitalEngine
+from derivkit.pricing.engines.fdm_snowball import FdmSnowballEngine
 from derivkit.pricing.engines.mc_asian import McAsianEngine
 from derivkit.pricing.engines.mc_barrier import McBarrierEngine
 from derivkit.pricing.engines.mc_digital import McDigitalEngine
-from derivkit.pricing.engines.fdm_snowball import FdmSnowballEngine
 from derivkit.pricing.engines.mc_phoenix import McPhoenixEngine
 from derivkit.pricing.engines.mc_snowball import McSnowballEngine
 from derivkit.pricing.engines.quad_fcn import QuadFcnEngine
@@ -51,6 +51,8 @@ ProductType = (
 
 def build_product(spec: PricingSpec, env: MarketEnv | None = None) -> ProductType:
     """Construct product from DSL product section."""
+    if spec.product is None:
+        raise ValueError("product section is required")
     ptype = spec.product.type
     params = spec.product.params
     uid = spec.market.underlyings[0].id
@@ -83,7 +85,10 @@ def build_product(spec: PricingSpec, env: MarketEnv | None = None) -> ProductTyp
 
 
 def _mc_params(engine_params: dict[str, Any], seed: int) -> dict[str, Any]:
-    out = {"n_paths": engine_params.get("n_paths", 100_000), "seed": engine_params.get("seed", seed)}
+    out = {
+        "n_paths": engine_params.get("n_paths", 100_000),
+        "seed": engine_params.get("seed", seed),
+    }
     if "rands_method" in engine_params:
         out["rands_method"] = engine_params["rands_method"]
     return out
@@ -101,7 +106,14 @@ def _create_engine_for_product(
         if method == EngineMethod.MC:
             return McSnowballEngine(**_mc_params(engine_params, seed))
         if method == EngineMethod.FDM:
-            fdm_keys = {"s_step", "n_smax", "scheme", "t_step_per_year", "european_knock_in", "trigger"}
+            fdm_keys = {
+                "s_step",
+                "n_smax",
+                "scheme",
+                "t_step_per_year",
+                "european_knock_in",
+                "trigger",
+            }
             return FdmSnowballEngine(**{k: v for k, v in engine_params.items() if k in fdm_keys})
         if method == EngineMethod.QUAD:
             quad_keys = {"quad_method", "n_points", "trigger"}
@@ -111,7 +123,13 @@ def _create_engine_for_product(
     if isinstance(product, (Phoenix, FCN)):
         if method == EngineMethod.MC:
             mc_keys = {"n_paths", "seed", "rands_method", "t_step_per_year"}
-            return McPhoenixEngine(**{k: v for k, v in {**_mc_params(engine_params, seed), **engine_params}.items() if k in mc_keys})
+            return McPhoenixEngine(
+                **{
+                    k: v
+                    for k, v in {**_mc_params(engine_params, seed), **engine_params}.items()
+                    if k in mc_keys
+                }
+            )
         if method == EngineMethod.QUAD and isinstance(product, FCN):
             quad_keys = {"quad_method", "n_points"}
             return QuadFcnEngine(**{k: v for k, v in engine_params.items() if k in quad_keys})
@@ -119,7 +137,9 @@ def _create_engine_for_product(
 
     if isinstance(product, BarrierOption):
         if method == EngineMethod.ANALYTIC:
-            return AnalyticBarrierEngine(**{k: v for k, v in engine_params.items() if k == "for_haug"})
+            return AnalyticBarrierEngine(
+                **{k: v for k, v in engine_params.items() if k == "for_haug"}
+            )
         if method == EngineMethod.MC:
             return McBarrierEngine(**_mc_params(engine_params, seed))
         raise ValueError(f"BarrierOption does not support engine method: {method}")
@@ -178,8 +198,7 @@ def run_pricing(spec: PricingSpec) -> PricingResult:
 def run_risk(spec: PricingSpec) -> PricingResult:
     """Run risk (greeks) calculation."""
     spec.output.fields = list(
-        set(spec.output.fields)
-        | {"pv", "delta", "gamma", "vega", "theta", "rho"}
+        set(spec.output.fields) | {"pv", "delta", "gamma", "vega", "theta", "rho"}
     )
     return run_pricing(spec)
 

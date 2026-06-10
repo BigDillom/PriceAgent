@@ -66,7 +66,7 @@ def _filter_contracts(
         raise ValueError(
             f"No active {call_put} options for underlying={underlying_symbol!r} on {valuation_date}"
         )
-    return df
+    return pd.DataFrame(df)
 
 
 def score_contract(

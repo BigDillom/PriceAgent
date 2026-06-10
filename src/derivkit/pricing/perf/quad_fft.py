@@ -6,8 +6,8 @@ pricelib/common/pricing_engine_base/quad_engine_base.py
 
 from __future__ import annotations
 
-import numpy as np
 import numba as nb
+import numpy as np
 from scipy.stats import norm
 
 from derivkit.core.enums import QuadMethod

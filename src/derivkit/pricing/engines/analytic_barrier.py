@@ -52,9 +52,9 @@ class AnalyticBarrierEngine(PricingEngine):
             return float(np.asarray(payoff).item())
 
         if not self.for_haug:
-            touched = (
-                product.updown == UpDown.UP and spot >= product.barrier
-            ) or (product.updown == UpDown.DOWN and spot <= product.barrier)
+            touched = (product.updown == UpDown.UP and spot >= product.barrier) or (
+                product.updown == UpDown.DOWN and spot <= product.barrier
+            )
             if touched:
                 if product.inout == InOut.OUT:
                     return product.rebate
@@ -128,9 +128,7 @@ class AnalyticBarrierEngine(PricingEngine):
             return float(product.rebate * (c * norm.cdf(eta * d9) + d * norm.cdf(eta * d10)))
 
         category = _barrier_category(product.barrier_type, product.call_put)
-        price = _price_by_category(
-            category, product.strike, barrier, A, B, C, D, E, F
-        )
+        price = _price_by_category(category, product.strike, barrier, A, B, C, D, E, F)
         return price * product.participation
 
 
@@ -151,26 +149,46 @@ def _barrier_category(barrier_type: BarrierType, call_put: CallPut) -> str:
 def _price_by_category(category, strike, barrier, A, B, C, D, E, F) -> float:
     if category == "UIC":
         phi, eta = 1, -1
-        return A(phi) + E(eta) if strike >= barrier else (B(phi) - C(phi, eta) + D(phi, eta)) + E(eta)
+        return (
+            A(phi) + E(eta) if strike >= barrier else (B(phi) - C(phi, eta) + D(phi, eta)) + E(eta)
+        )
     if category == "UIP":
         phi, eta = -1, -1
-        return (A(phi) - B(phi) + D(phi, eta)) + E(eta) if strike >= barrier else C(phi, eta) + E(eta)
+        return (
+            (A(phi) - B(phi) + D(phi, eta)) + E(eta) if strike >= barrier else C(phi, eta) + E(eta)
+        )
     if category == "UOC":
         phi, eta = 1, -1
-        return F(eta) if strike >= barrier else (A(phi) - B(phi) + C(phi, eta) - D(phi, eta)) + F(eta)
+        return (
+            F(eta) if strike >= barrier else (A(phi) - B(phi) + C(phi, eta) - D(phi, eta)) + F(eta)
+        )
     if category == "UOP":
         phi, eta = -1, -1
-        return (B(phi) - D(phi, eta)) + F(eta) if strike >= barrier else (A(phi) - C(phi, eta)) + F(eta)
+        return (
+            (B(phi) - D(phi, eta)) + F(eta)
+            if strike >= barrier
+            else (A(phi) - C(phi, eta)) + F(eta)
+        )
     if category == "DIC":
         phi, eta = 1, 1
-        return C(phi, eta) + E(eta) if strike >= barrier else (A(phi) - B(phi) + D(phi, eta)) + E(eta)
+        return (
+            C(phi, eta) + E(eta) if strike >= barrier else (A(phi) - B(phi) + D(phi, eta)) + E(eta)
+        )
     if category == "DIP":
         phi, eta = -1, 1
-        return (B(phi) - C(phi, eta) + D(phi, eta)) + E(eta) if strike >= barrier else A(phi) + E(eta)
+        return (
+            (B(phi) - C(phi, eta) + D(phi, eta)) + E(eta) if strike >= barrier else A(phi) + E(eta)
+        )
     if category == "DOC":
         phi, eta = 1, 1
-        return (A(phi) - C(phi, eta)) + F(eta) if strike >= barrier else (B(phi) - D(phi, eta)) + F(eta)
+        return (
+            (A(phi) - C(phi, eta)) + F(eta)
+            if strike >= barrier
+            else (B(phi) - D(phi, eta)) + F(eta)
+        )
     if category == "DOP":
         phi, eta = -1, 1
-        return (A(phi) - B(phi) + C(phi, eta) - D(phi, eta)) + F(eta) if strike >= barrier else F(eta)
+        return (
+            (A(phi) - B(phi) + C(phi, eta) - D(phi, eta)) + F(eta) if strike >= barrier else F(eta)
+        )
     raise ValueError(f"Unknown barrier category: {category}")

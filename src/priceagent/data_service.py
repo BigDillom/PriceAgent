@@ -10,9 +10,9 @@ from typing import Any
 
 import pandas as pd
 
-from derivkit.core.enums import AlignPolicy, AssetClass
+from derivkit.core.enums import AlignPolicy
 from derivkit.data.adapters import commodity, equity
-from derivkit.data.adapters.base import load_csv, series_summary
+from derivkit.data.adapters.base import series_summary
 from derivkit.data.alignment import align_spot_to_valuation, build_valuation_datetime
 from derivkit.data.tushare_loader import resolve_exchange, resolve_option_opt_code
 from priceagent.option_lookup import find_nearby_option_contract
@@ -100,7 +100,11 @@ class DataService:
     def list_yaml_examples(self) -> list[dict[str, str]]:
         """List DerivKit DSL and QFbench task YAML files."""
         items: list[dict[str, str]] = []
-        for root, label in ((DSL_EXAMPLES, "dsl"), (QF_TASKS, "qfbench"), (self.examples_root, "commodity")):
+        for root, label in (
+            (DSL_EXAMPLES, "dsl"),
+            (QF_TASKS, "qfbench"),
+            (self.examples_root, "commodity"),
+        ):
             if not root.exists():
                 continue
             for path in sorted(root.rglob("*.yaml")):

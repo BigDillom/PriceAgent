@@ -53,11 +53,17 @@ def calibrate(spec: str | Path | dict[str, Any] | PricingSpec) -> PricingResult:
         parsed = spec
         base_dir = None
     else:
-        path = Path(spec) if isinstance(spec, (str, Path)) and Path(spec).suffix in (
-            ".yaml",
-            ".yml",
-            ".json",
-        ) else None
+        path = (
+            Path(spec)
+            if isinstance(spec, (str, Path))
+            and Path(spec).suffix
+            in (
+                ".yaml",
+                ".yml",
+                ".json",
+            )
+            else None
+        )
         parsed = load_spec(spec)
         base_dir = path.parent if path else None
     return run_calibrate(parsed, base_dir=base_dir)

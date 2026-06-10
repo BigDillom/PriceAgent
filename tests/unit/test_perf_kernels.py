@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from derivkit.core.enums import QuadMethod
 from derivkit.pricing.perf.mc_kernels import evolve_bs_log, simulate_gbm_terminal
@@ -58,7 +57,10 @@ class TestPdeKernels:
         diag_coef = -diffusion_square - c
         upper_coef = 0.5 * (diffusion_square + drift_coef)
         eye = sparse.eye(s_vec.size)
-        a_mat = sparse.diags((lower_coef[1:], diag_coef, upper_coef[:-1]), (-1, 0, 1), format="csc") * dt
+        a_mat = (
+            sparse.diags((lower_coef[1:], diag_coef, upper_coef[:-1]), (-1, 0, 1), format="csc")
+            * dt
+        )
         m1 = eye - theta * a_mat
         m2 = eye + (1 - theta) * a_mat
         v_vec = m2.dot(yv)

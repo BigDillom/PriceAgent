@@ -4,6 +4,7 @@ import pytest
 
 from derivkit.core.rng import set_seed
 from derivkit.data.market_env import MarketEnv
+from derivkit.dsl.schema import PricingSpec
 from derivkit.pricing.engines.fdm_snowball import FdmSnowballEngine
 from derivkit.pricing.engines.mc_phoenix import McPhoenixEngine
 from derivkit.pricing.engines.mc_snowball import McSnowballEngine
@@ -12,8 +13,7 @@ from derivkit.pricing.engines.quad_snowball import QuadSnowballEngine
 from derivkit.pricing.products.fcn import FCN
 from derivkit.pricing.products.phoenix import Phoenix
 from derivkit.pricing.products.snowball import StandardSnowball
-from derivkit.verify.oracle import cross_check, default_tolerances, tolerance_for
-from derivkit.dsl.schema import PricingSpec
+from derivkit.verify.oracle import default_tolerances, tolerance_for
 
 
 @pytest.fixture
@@ -127,7 +127,9 @@ def test_snowball_dsl_quad(snowball_env_product):
             "valuation_date": "2024-01-05",
             "underlyings": [{"id": "CSI1000", "asset_class": "index", "spot": 100.0}],
             "rates": [{"id": "CN_RF", "kind": "constant", "value": 0.05}],
-            "vols": [{"id": "CSI1000", "kind": "constant", "value": 0.2, "underlying_id": "CSI1000"}],
+            "vols": [
+                {"id": "CSI1000", "kind": "constant", "value": 0.2, "underlying_id": "CSI1000"}
+            ],
         },
         "product": {
             "type": "snowball.standard",

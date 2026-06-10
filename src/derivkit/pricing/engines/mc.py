@@ -57,10 +57,12 @@ class McEngine(PricingEngine):
 
         drift_tau = (r - q - 0.5 * sigma**2) * tau
         vol_sqrt_tau = sigma * np.sqrt(tau)
-        s_t = np.concatenate([
-            simulate_gbm_terminal(s0, drift_tau, vol_sqrt_tau, z),
-            simulate_gbm_terminal(s0, drift_tau, vol_sqrt_tau, z_anti),
-        ])
+        s_t = np.concatenate(
+            [
+                simulate_gbm_terminal(s0, drift_tau, vol_sqrt_tau, z),
+                simulate_gbm_terminal(s0, drift_tau, vol_sqrt_tau, z_anti),
+            ]
+        )
         payoffs = product.payoff(s_t)
         if isinstance(payoffs, float):
             payoffs = np.full(len(s_t), payoffs)

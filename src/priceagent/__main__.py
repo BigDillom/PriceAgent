@@ -6,7 +6,6 @@ import argparse
 import json
 import logging
 import sys
-from pathlib import Path
 
 from priceagent.agent import run_agent, run_demo_pricing, run_tushare_demo
 from priceagent.tools import ToolRegistry, execute_tool
@@ -77,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
 
     p_run = sub.add_parser("run", help="Run LLM agent with tool calling")
     p_run.add_argument("prompt", help="Natural language pricing request")
-    p_run.add_argument("--model", default=None, help="Model name (default: OPENAI_MODEL or gpt-4o-mini)")
+    p_run.add_argument(
+        "--model", default=None, help="Model name (default: OPENAI_MODEL or gpt-4o-mini)"
+    )
     p_run.add_argument("--max-turns", type=int, default=12)
     p_run.add_argument("-v", "--verbose", action="store_true")
     p_run.set_defaults(func=cmd_run)
@@ -91,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("list", help="List datasets and YAML examples").set_defaults(func=cmd_list)
 
     args = parser.parse_args(argv)
-    return args.func(args)
+    return int(args.func(args))
 
 
 def cli() -> None:

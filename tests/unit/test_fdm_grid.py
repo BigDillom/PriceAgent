@@ -1,16 +1,16 @@
 """Unit tests for FdmGrid-based vanilla FDM engine."""
 
+from datetime import date
+
 import pytest
 
-from derivkit.core.enums import CallPut
+from derivkit.core.enums import AssetClass, CallPut
 from derivkit.data.market_env import MarketEnv, UnderlyingSpec
-from derivkit.core.enums import AssetClass
 from derivkit.data.term_structures import ConstantRate
 from derivkit.data.volmodels import ConstantVol
 from derivkit.pricing.engines.analytic import AnalyticEngine
 from derivkit.pricing.engines.fdm import FdmEngine
 from derivkit.pricing.products.vanilla import EuropeanVanilla
-from datetime import date
 
 
 @pytest.fixture
@@ -40,11 +40,17 @@ class TestFdmGridEngine:
         from derivkit.core.enums import ExerciseType
 
         eu = EuropeanVanilla(
-            strike=100, maturity=1.0, call_put=CallPut.CALL, underlying_id="SPX",
+            strike=100,
+            maturity=1.0,
+            call_put=CallPut.CALL,
+            underlying_id="SPX",
             exercise=ExerciseType.EUROPEAN,
         )
         am = EuropeanVanilla(
-            strike=100, maturity=1.0, call_put=CallPut.CALL, underlying_id="SPX",
+            strike=100,
+            maturity=1.0,
+            call_put=CallPut.CALL,
+            underlying_id="SPX",
             exercise=ExerciseType.AMERICAN,
         )
         pv_eu = FdmEngine(n_s=300).calc_present_value(eu, env)

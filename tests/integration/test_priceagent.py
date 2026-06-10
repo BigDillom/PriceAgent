@@ -13,7 +13,9 @@ from priceagent.data_service import DataService
 from priceagent.tools import ToolRegistry, execute_tool
 from priceagent.tushare_client import resolve_option_opt_code, resolve_ts_code
 
-COMMODITY_YAML = Path(__file__).resolve().parents[2] / "examples" / "commodity" / "lh_vanilla_call.yaml"
+COMMODITY_YAML = (
+    Path(__file__).resolve().parents[2] / "examples" / "commodity" / "lh_vanilla_call.yaml"
+)
 
 
 @pytest.mark.integration
@@ -169,15 +171,15 @@ def test_calibrate_volatility_tushare_historical_mocked():
     reg = ToolRegistry(DataService(tushare_client=FakeClient()))
     with patch("derivkit.data.tushare_loader.TushareClient", FakeClient):
         out = reg.execute(
-        "calibrate_volatility",
-        {
-            "method": "historical",
-            "symbol": "LH2609",
-            "valuation_date": "2026-06-08",
-            "lookback_days": 90,
-            "window": 60,
-            "exchange": "DCE",
-        },
+            "calibrate_volatility",
+            {
+                "method": "historical",
+                "symbol": "LH2609",
+                "valuation_date": "2026-06-08",
+                "lookback_days": 90,
+                "window": 60,
+                "exchange": "DCE",
+            },
         )
     assert out["pv"] > 0
     assert out["meta"]["data_source"]["source"] == "tushare"

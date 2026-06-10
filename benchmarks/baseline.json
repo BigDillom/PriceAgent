@@ -19,9 +19,9 @@
       "description": "Standard snowball PDE, s_step=400"
     },
     "snowball_quad": {
-      "target_ms": 200.0,
-      "baseline_ms": 120.0,
-      "description": "Standard snowball FFT quadrature"
+      "target_ms": 350.0,
+      "baseline_ms": 280.0,
+      "description": "Standard snowball FFT quadrature (n_points=901; calibrated on ubuntu-latest CI)"
     },
     "barrier_multi": {
       "target_ms": 1500.0,

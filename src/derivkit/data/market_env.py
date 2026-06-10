@@ -11,7 +11,6 @@ from typing import Any
 
 import pandas as pd
 
-from derivkit.core.conventions import parse_tenor, year_fraction
 from derivkit.core.enums import AlignPolicy, AssetClass, Compounding, DayCount
 from derivkit.data.alignment import (
     AlignmentResult,
@@ -90,7 +89,10 @@ class MarketEnv:
         env = copy.deepcopy(self)
         if isinstance(env.rates, ConstantRate):
             env.rates = ConstantRate(
-                env.rates.rate + amount, env.rates.day_count, env.rates.compounding, env.rates.rate_id
+                env.rates.rate + amount,
+                env.rates.day_count,
+                env.rates.compounding,
+                env.rates.rate_id,
             )
         elif isinstance(env.rates, RateCurve):
             env.rates = env.rates.bump(amount)

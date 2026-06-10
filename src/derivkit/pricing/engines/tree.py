@@ -51,7 +51,11 @@ class TreeEngine(PricingEngine):
 
         # Terminal payoffs
         spots = s0 * u ** np.arange(n, -1, -1) * d ** np.arange(0, n + 1)
-        values = np.maximum(spots - k, 0.0) if product.call_put.value == "call" else np.maximum(k - spots, 0.0)
+        values = (
+            np.maximum(spots - k, 0.0)
+            if product.call_put.value == "call"
+            else np.maximum(k - spots, 0.0)
+        )
 
         # Backward induction
         for _ in range(n):

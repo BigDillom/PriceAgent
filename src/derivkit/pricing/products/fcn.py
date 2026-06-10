@@ -59,7 +59,9 @@ class FCN(Product):
     ) -> FCN:
         maturity = parse_tenor(params.get("maturity", "1y"))
         lock_term = params.get("lock_term", "1m")
-        lock_months = int(parse_tenor(lock_term) * 12) if isinstance(lock_term, str) else int(lock_term)
+        lock_months = (
+            int(parse_tenor(lock_term) * 12) if isinstance(lock_term, str) else int(lock_term)
+        )
         s0 = float(params.get("s0", 100))
         barrier_in = float(params.get("barrier_in", 80))
         return cls(
@@ -72,7 +74,9 @@ class FCN(Product):
             lock_term_months=lock_months,
             margin_lvl=float(params.get("margin_lvl", 1.0)),
             parti_in=float(params.get("parti_in", 1.0)),
-            strike_upper=float(params["strike_upper"]) if params.get("strike_upper") is not None else None,
+            strike_upper=(
+                float(params["strike_upper"]) if params.get("strike_upper") is not None else None
+            ),
             valuation_date=valuation_date,
         )
 

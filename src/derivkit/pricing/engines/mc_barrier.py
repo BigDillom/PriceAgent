@@ -74,10 +74,16 @@ class McBarrierEngine(PricingEngine):
 
         if product.inout == InOut.IN:
             payoff = np.full(paths.shape[0], product.rebate)
-            payoff[knock] = np.maximum(sign * (terminal[knock] - product.strike), 0.0) * product.participation
+            payoff[knock] = (
+                np.maximum(sign * (terminal[knock] - product.strike), 0.0) * product.participation
+            )
             return float(np.mean(payoff) * np.exp(-r * tau))
 
-        payoff = np.maximum(sign * (terminal - product.strike), 0.0) * product.participation * np.exp(-r * tau)
+        payoff = (
+            np.maximum(sign * (terminal - product.strike), 0.0)
+            * product.participation
+            * np.exp(-r * tau)
+        )
         if product.payment_type == PaymentType.EXPIRE:
             payoff[knock] = product.rebate * np.exp(-r * tau)
         else:

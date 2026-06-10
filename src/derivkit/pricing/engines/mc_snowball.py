@@ -78,14 +78,17 @@ class McSnowballEngine(PricingEngine):
         for i, obs_idx in enumerate(obs_indices):
             bo = barrier_out[min(i, len(barrier_out) - 1)]
             hit = all_paths[:, obs_idx] >= bo
-            knock_out_date = np.where(hit & (obs_indices[i] < knock_out_date), obs_idx, knock_out_date)
+            knock_out_date = np.where(
+                hit & (obs_indices[i] < knock_out_date), obs_idx, knock_out_date
+            )
 
-        not_knocked_out = knock_out_date == np.inf
         ki_level = barrier_in[0] if len(barrier_in) else product.barrier_in
         knocked_in = np.any(all_paths <= ki_level, axis=1)
 
         pv_total = 0.0
-        disc = lambda t_ann: np.exp(-r * t_ann)
+
+        def disc(t_ann: float) -> float:
+            return float(np.exp(-r * t_ann))
 
         for p in range(n_path):
             if knock_out_date[p] < np.inf:
@@ -103,7 +106,9 @@ class McSnowballEngine(PricingEngine):
                 pv_total += payoff * disc(tau)
             else:
                 s_t = all_paths[p, -1]
-                loss = max(min(s_t - product.strike_upper, 0), product.strike_lower - product.strike_upper)
+                loss = max(
+                    min(s_t - product.strike_upper, 0), product.strike_lower - product.strike_upper
+                )
                 payoff = loss * product.parti_in + product.margin_lvl * product.s0
                 pv_total += payoff * disc(tau)
 

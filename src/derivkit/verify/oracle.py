@@ -7,10 +7,9 @@ from typing import Any
 
 from derivkit.core.enums import EngineMethod
 from derivkit.core.rng import set_seed
-from derivkit.dsl.schema import PricingSpec
-from derivkit.engine_orchestrator import build_product, run_pricing
-from derivkit.pricing.engines import create_engine
 from derivkit.data.market_env import MarketEnv
+from derivkit.dsl.schema import PricingSpec
+from derivkit.engine_orchestrator import build_product
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +90,8 @@ def cross_check(
     Returns:
         Dict with reference_pv, results per method, and pass/fail status.
     """
+    if spec.product is None:
+        raise ValueError("product section is required")
     product_type = spec.product.type
     tol = tolerances or default_tolerances(product_type)
 
@@ -115,12 +116,12 @@ def cross_check(
 
     ref_pv = results[ref_key]
     checks: dict[str, bool] = {}
-    for method, pv in results.items():
-        if method == ref_key:
-            checks[method] = True
+    for method_key, pv in results.items():
+        if method_key == ref_key:
+            checks[method_key] = True
             continue
-        t = tol.get(method, 0.1)
-        checks[method] = abs(pv - ref_pv) <= t + abs(ref_pv) * t
+        t = tol.get(method_key, 0.1)
+        checks[method_key] = abs(pv - ref_pv) <= t + abs(ref_pv) * t
 
     return {
         "reference": ref_key,
@@ -133,9 +134,7 @@ def cross_check(
     }
 
 
-def _default_methods_for_product(
-    product_type: str, reference: EngineMethod
-) -> list[EngineMethod]:
+def _default_methods_for_product(product_type: str, reference: EngineMethod) -> list[EngineMethod]:
     tol = default_tolerances(product_type)
     methods = [EngineMethod(m) for m in tol if EngineMethod(m) != reference]
     if reference in [EngineMethod(m) for m in tol]:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 from derivkit.core.enums import AlignPolicy
@@ -51,7 +50,9 @@ def test_market_env_cn_calendar_meta():
             "calendar": "CN",
             "underlyings": [{"id": "CSI300", "asset_class": "index", "spot": 3500.0}],
             "rates": [{"kind": "constant", "value": 0.03}],
-            "vols": [{"id": "CSI300", "kind": "constant", "value": 0.18, "underlying_id": "CSI300"}],
+            "vols": [
+                {"id": "CSI300", "kind": "constant", "value": 0.18, "underlying_id": "CSI300"}
+            ],
         }
     }
     env = MarketEnv.from_spec(spec)

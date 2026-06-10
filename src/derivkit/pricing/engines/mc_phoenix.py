@@ -110,7 +110,11 @@ class McPhoenixEngine(PricingEngine):
 
         payoff = 0.0
         hold_times_ann = hold_idx / n_steps * tau
-        payoff += np.sum(np.exp(-r * hold_times_ann[~knock_in_scenario])) * product.margin_lvl * product.s0
+        payoff += (
+            np.sum(np.exp(-r * hold_times_ann[~knock_in_scenario]))
+            * product.margin_lvl
+            * product.s0
+        )
         payoff += np.sum(np.sum(coupon_bool, axis=1) * discounted_coupon)
 
         s_end = all_paths[knock_in_scenario, -1].copy()
@@ -124,9 +128,7 @@ class McPhoenixEngine(PricingEngine):
         return float(payoff / n_path)
 
     @staticmethod
-    def _obs_indices(
-        val_date: date, product: PhoenixProduct, n_steps: int, dt: float
-    ) -> list[int]:
+    def _obs_indices(val_date: date, product: PhoenixProduct, n_steps: int, dt: float) -> list[int]:
         indices: list[int] = []
         for obs in product.obs_dates:
             days = (obs - val_date).days

@@ -173,9 +173,8 @@ class FdmSnowballEngine(PricingEngine):
         interest_maturity_discount_factor = _disc_factor(self._rate, maturity, t_vec)
 
         self.fd_not_in.v_grid[0, :] = self.fd_knockin.v_grid[0, :] = (
-            (prod.margin_lvl * prod.s0 - prod.strike_upper + prod.strike_lower)
-            * interest_maturity_discount_factor
-        )
+            prod.margin_lvl * prod.s0 - prod.strike_upper + prod.strike_lower
+        ) * interest_maturity_discount_factor
 
         assert self.out_dates is not None and self.pay_dates is not None
         self.next_paydate = self.pay_dates.repeat(
@@ -187,10 +186,11 @@ class FdmSnowballEngine(PricingEngine):
         interest_next_paydate_discount_factor = _disc_factor(self._rate, self.next_paydate, t_vec)
         div_next_paydate_discount_factor = _disc_factor(self._div, self.next_paydate, t_vec)
         v_smax = (
-            (smax * div_next_paydate_discount_factor - prod.strike_call * interest_next_paydate_discount_factor)
-            * prod.parti_out
-            + (prod.margin_lvl + self.coupon_outs * coupon_t) * prod.s0 * interest_next_paydate_discount_factor
-        )
+            smax * div_next_paydate_discount_factor
+            - prod.strike_call * interest_next_paydate_discount_factor
+        ) * prod.parti_out + (
+            prod.margin_lvl + self.coupon_outs * coupon_t
+        ) * prod.s0 * interest_next_paydate_discount_factor
         s_idx = self.fd_not_in.v_grid.shape[0] - 1
         self.fd_knockin.v_grid[s_idx, :] = self.fd_not_in.v_grid[s_idx, :] = v_smax
 
@@ -311,7 +311,9 @@ class FdmSnowballEngine(PricingEngine):
                     self.next_barrier_out = float(self.reversed_barrier_out[idx])
                 else:
                     self.next_barrier_out = float(prod.barrier_out)
-                self.out_idxs = 1 + np.array(np.where(self.fd_not_in.s_vec >= self.next_barrier_out)[0])
+                self.out_idxs = 1 + np.array(
+                    np.where(self.fd_not_in.s_vec >= self.next_barrier_out)[0]
+                )
 
                 if self.reversed_coupon_out is not None:
                     idx = int(np.where(self.out_dates == j)[0][0])
@@ -327,9 +329,9 @@ class FdmSnowballEngine(PricingEngine):
                     self.next_paydate[j],
                     self.next_paydate[j] - self.next_diff_obspaydate[j],
                 )
-                self.fd_not_in.v_grid[self.out_idxs, j] = self.fd_knockin.v_grid[self.out_idxs, j] = (
-                    knock_out_payoff
-                )
+                self.fd_not_in.v_grid[self.out_idxs, j] = self.fd_knockin.v_grid[
+                    self.out_idxs, j
+                ] = knock_out_payoff
 
                 if not self.european_knock_in:
                     if self.reversed_barrier_in is not None:
@@ -343,4 +345,6 @@ class FdmSnowballEngine(PricingEngine):
                         else 0
                     )
 
-            self.fd_not_in.v_grid[: self.in_idx + 1, j] = self.fd_knockin.v_grid[: self.in_idx + 1, j]
+            self.fd_not_in.v_grid[: self.in_idx + 1, j] = self.fd_knockin.v_grid[
+                : self.in_idx + 1, j
+            ]

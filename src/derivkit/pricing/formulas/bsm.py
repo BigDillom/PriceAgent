@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
 from scipy.stats import norm
 
 
@@ -40,7 +39,9 @@ def bs_call_put(
     )
 
 
-def bs_delta(S: float, K: float, T: float, r: float, sigma: float, sign: int, q: float = 0.0) -> float:
+def bs_delta(
+    S: float, K: float, T: float, r: float, sigma: float, sign: int, q: float = 0.0
+) -> float:
     if T <= 0:
         return float(sign) if sign * (S - K) > 0 else 0.0
     return float(sign * math.exp(-q * T) * norm.cdf(sign * bs_d1(S, K, T, r, sigma, q)))
@@ -61,7 +62,9 @@ def bs_vega(S: float, K: float, T: float, r: float, sigma: float, q: float = 0.0
     return float(math.exp(-q * T) * S * norm.pdf(d1) * math.sqrt(T) * 0.01)
 
 
-def bs_rho(S: float, K: float, T: float, r: float, sigma: float, sign: int, q: float = 0.0) -> float:
+def bs_rho(
+    S: float, K: float, T: float, r: float, sigma: float, sign: int, q: float = 0.0
+) -> float:
     """Rho per 1% rate bump."""
     if T <= 0:
         return 0.0

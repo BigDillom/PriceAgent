@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
 from scipy.stats import norm
 
 from derivkit.core.enums import CallPut, EngineMethod, ExerciseType, PaymentType
@@ -95,8 +94,7 @@ class AnalyticDigitalEngine(PricingEngine):
                 * math.exp(-r * tau)
                 * (
                     norm.cdf((v * tau - math.log(k_s)) / denominator * sign)
-                    + k_s ** (2 * mu)
-                    * norm.cdf(-(v * tau + math.log(k_s)) / denominator * sign)
+                    + k_s ** (2 * mu) * norm.cdf(-(v * tau + math.log(k_s)) / denominator * sign)
                 )
             )
 

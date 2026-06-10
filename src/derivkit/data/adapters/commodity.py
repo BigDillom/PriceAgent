@@ -13,5 +13,7 @@ __all__ = ["load_csv", "normalize", "series_summary", "ASSET_CLASS"]
 ASSET_CLASS = AssetClass.COMMODITY
 
 
-def normalize(df: pd.DataFrame, instrument_id: str, asset_class: AssetClass | str = ASSET_CLASS) -> pd.DataFrame:
+def normalize(
+    df: pd.DataFrame, instrument_id: str, asset_class: AssetClass | str = ASSET_CLASS
+) -> pd.DataFrame:
     return base.normalize(df, instrument_id, asset_class)

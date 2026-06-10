@@ -51,14 +51,14 @@ class AnalyticAsianEngine(PricingEngine):
 
         obs_start = product.obs_start_frac * tau
         obs_end = product.obs_end_frac * tau
-        t_step = product.t_step_per_year
-
         if product.ave_method == AverageMethod.GEOMETRIC:
             if obs_start > 1e-12 or abs(obs_end - tau) > 1e-12:
                 raise ValueError("Geometric Asian analytic requires full-life averaging window")
             b_a = 0.5 * (b - vol**2 / 6)
             vol_a = vol / math.sqrt(3)
-            d1 = (math.log(spot / product.strike) + (b_a + 0.5 * vol_a**2) * tau) / (vol_a * math.sqrt(tau))
+            d1 = (math.log(spot / product.strike) + (b_a + 0.5 * vol_a**2) * tau) / (
+                vol_a * math.sqrt(tau)
+            )
             d2 = d1 - vol_a * math.sqrt(tau)
             price = sign * (
                 spot * math.exp((b_a - r) * tau) * norm.cdf(sign * d1)
@@ -76,7 +76,11 @@ class AnalyticAsianEngine(PricingEngine):
             if b == 0:
                 m1 = 1.0
             else:
-                m1 = (math.exp(b * tau) - math.exp(b * t1)) / (b * tau - b * t1) if tau != t1 else 1.0
+                m1 = (
+                    (math.exp(b * tau) - math.exp(b * t1)) / (b * tau - b * t1)
+                    if tau != t1
+                    else 1.0
+                )
 
             if tau_adj > 0:
                 if product.s_average is None:
@@ -85,7 +89,11 @@ class AnalyticAsianEngine(PricingEngine):
                 if strike_hat < 0:
                     if product.call_put == CallPut.CALL:
                         s_a = product.s_average * (t2 - tau) / t2 + spot * m1 * tau / t2
-                        return max(s_a - product.strike, 0.0) * math.exp(-r * tau) * product.participation
+                        return (
+                            max(s_a - product.strike, 0.0)
+                            * math.exp(-r * tau)
+                            * product.participation
+                        )
                     return 0.0
             else:
                 strike_hat = product.strike
@@ -96,17 +104,17 @@ class AnalyticAsianEngine(PricingEngine):
                     - 2 * math.exp(vol**2 * t1) * (1 + vol**2 * (tau - t1))
                 ) / (vol**4 * (tau - t1) ** 2)
             else:
-                m2 = (
-                    2 * math.exp((2 * b + vol**2) * tau)
-                ) / ((b + vol**2) * (2 * b + vol**2) * (tau - t1) ** 2) + (
-                    2 * math.exp((2 * b + vol**2) * t1)
-                ) / (b * (tau - t1) ** 2) * (
+                m2 = (2 * math.exp((2 * b + vol**2) * tau)) / (
+                    (b + vol**2) * (2 * b + vol**2) * (tau - t1) ** 2
+                ) + (2 * math.exp((2 * b + vol**2) * t1)) / (b * (tau - t1) ** 2) * (
                     1 / (2 * b + vol**2) - math.exp(b * (tau - t1)) / (b + vol**2)
                 )
 
             b_a = math.log(m1) / tau if tau > 0 else 0.0
             vol_a = math.sqrt(max(math.log(m2) / tau - 2 * b_a, 0.0)) if tau > 0 else 0.0
-            d1 = (math.log(spot / strike_hat) + (b_a + 0.5 * vol_a**2) * tau) / (vol_a * math.sqrt(tau))
+            d1 = (math.log(spot / strike_hat) + (b_a + 0.5 * vol_a**2) * tau) / (
+                vol_a * math.sqrt(tau)
+            )
             d2 = d1 - vol_a * math.sqrt(tau)
             price = sign * (
                 spot * math.exp((b_a - r) * tau) * norm.cdf(sign * d1)

@@ -37,7 +37,7 @@ def get_tushare_token() -> str:
     _load_dotenv()
     token = os.environ.get("TUSHARE_TOKEN", "").strip()
     if not token:
-        raise EnvironmentError(
+        raise OSError(
             "TUSHARE_TOKEN is not set. Register at https://tushare.pro and add the token to .env"
         )
     return token

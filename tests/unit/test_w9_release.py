@@ -78,9 +78,7 @@ class TestAdapters:
         assert out["asset_class"].iloc[0] == AssetClass.EQUITY.value
 
     def test_commodity_normalize(self):
-        df = pd.DataFrame(
-            {"datetime": pd.to_datetime(["2024-06-14"]), "close": [50.0]}
-        )
+        df = pd.DataFrame({"datetime": pd.to_datetime(["2024-06-14"]), "close": [50.0]})
         out = commodity.normalize(df, "LH2409")
         assert out["asset_class"].iloc[0] == AssetClass.COMMODITY.value
 
@@ -232,6 +230,45 @@ class TestDataModules:
         assert env.bump_time(-1 / 365).valuation_date < env.valuation_date
         with pytest.raises(KeyError):
             env.spot("UNKNOWN")
+
+    def test_market_env_from_spec_spot_csv_dict(self):
+        csv_path = (
+            Path(__file__).resolve().parents[2] / "examples" / "commodity" / "data" / "lh2409.csv"
+        )
+        spec = {
+            "valuation_date": "2024-06-14",
+            "calendar": "CN",
+            "underlyings": [
+                {
+                    "id": "LH2409",
+                    "asset_class": "commodity",
+                    "spot": {
+                        "source": "csv",
+                        "path": str(csv_path),
+                        "field": "close",
+                        "session_close": "23:00",
+                        "tz": "Asia/Shanghai",
+                    },
+                }
+            ],
+        }
+        env = MarketEnv.from_spec(spec)
+        assert env.spot("LH2409") == 15520.0
+        assert env.alignment is not None
+        assert len(env.alignment.records) == 1
+
+    def test_market_env_unknown_spot_source(self):
+        spec = {
+            "valuation_date": "2024-06-14",
+            "underlyings": [
+                {
+                    "id": "LH2409",
+                    "spot": {"source": "tushare", "symbol": "LH2409"},
+                }
+            ],
+        }
+        with pytest.raises(ValueError, match="Unknown spot source"):
+            MarketEnv.from_spec(spec)
 
     def test_market_env_from_spec_rate_curve_csv(self, tmp_path):
         csv_path = tmp_path / "curve.csv"
@@ -474,8 +511,7 @@ class TestOrchestrator:
         from derivkit.dsl.loader import load_spec
 
         yaml_path = (
-            Path(__file__).resolve().parents[2]
-            / "src/derivkit/dsl/examples/snowball_standard.yaml"
+            Path(__file__).resolve().parents[2] / "src/derivkit/dsl/examples/snowball_standard.yaml"
         )
         snowball = load_spec(yaml_path)
         snowball.engine.params = {"n_paths": 5000}
@@ -685,6 +721,21 @@ class TestAsianProduct:
 
 
 class TestOracleExtended:
+    def test_oracle_requires_product(self):
+        from derivkit.verify.oracle import cross_check
+
+        spec = PricingSpec.model_validate(
+            {
+                "task": "price",
+                "market": {
+                    "valuation_date": "2024-01-05",
+                    "underlyings": [{"id": "SPX", "spot": 100.0}],
+                },
+            }
+        )
+        with pytest.raises(ValueError, match="product section is required"):
+            cross_check(spec)
+
     def test_oracle_helpers_and_cross_check(self):
         from derivkit.verify.oracle import (
             cross_check,
@@ -717,9 +768,7 @@ class TestOracleExtended:
                 "output": {"seed": 42, "deterministic": True},
             }
         )
-        report = cross_check(
-            spec, methods=[EngineMethod.ANALYTIC, EngineMethod.TREE], seed=42
-        )
+        report = cross_check(spec, methods=[EngineMethod.ANALYTIC, EngineMethod.TREE], seed=42)
         assert report["passed"]
 
 

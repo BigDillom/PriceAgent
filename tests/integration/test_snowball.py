@@ -20,7 +20,9 @@ def snowball_spec_dict() -> dict:
             "valuation_date": "2024-01-05",
             "underlyings": [{"id": "CSI1000", "asset_class": "index", "spot": 100.0}],
             "rates": [{"id": "CN_RF", "kind": "constant", "value": 0.05}],
-            "vols": [{"id": "CSI1000", "kind": "constant", "value": 0.2, "underlying_id": "CSI1000"}],
+            "vols": [
+                {"id": "CSI1000", "kind": "constant", "value": 0.2, "underlying_id": "CSI1000"}
+            ],
         },
         "product": {
             "type": "snowball.standard",

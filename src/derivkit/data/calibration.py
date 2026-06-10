@@ -94,9 +94,7 @@ def implied_volatility(
     sign = 1 if cp == CallPut.CALL else -1
     intrinsic = max(sign * (spot - strike), 0.0)
     if market_price < intrinsic - 1e-10:
-        raise ValueError(
-            f"market_price {market_price} below intrinsic {intrinsic} for {cp.value}"
-        )
+        raise ValueError(f"market_price {market_price} below intrinsic {intrinsic} for {cp.value}")
 
     def objective(sigma: float) -> float:
         return bs_call_put(spot, strike, t, rate, sigma, sign, div_yield) - market_price

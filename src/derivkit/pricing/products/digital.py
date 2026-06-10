@@ -28,7 +28,9 @@ class DigitalOption(Product):
         self.rebate = float(rebate)
         self.call_put = CallPut(call_put) if isinstance(call_put, str) else call_put
         self.exercise = ExerciseType(exercise) if isinstance(exercise, str) else exercise
-        self.payment_type = PaymentType(payment_type) if isinstance(payment_type, str) else payment_type
+        self.payment_type = (
+            PaymentType(payment_type) if isinstance(payment_type, str) else payment_type
+        )
         self._maturity = parse_tenor(maturity) if isinstance(maturity, str) else float(maturity)
         self.underlying_id = underlying_id
         self.discrete_obs_interval = discrete_obs_interval

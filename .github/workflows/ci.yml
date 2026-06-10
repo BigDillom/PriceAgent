@@ -38,7 +38,9 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]"
       - name: Performance benchmarks
-        run: python benchmarks/run_benchmarks.py --compare --json benchmarks/report.json
+        env:
+          NUMBA_NUM_THREADS: "1"
+        run: python benchmarks/run_benchmarks.py --compare --repeats 5 --json benchmarks/report.json
       - name: Upload perf report
         if: always()
         uses: actions/upload-artifact@v4
