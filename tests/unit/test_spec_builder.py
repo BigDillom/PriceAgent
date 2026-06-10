@@ -31,6 +31,25 @@ def test_normalize_flat_market():
     assert result.pv > 0
 
 
+def test_normalize_american_alias():
+    raw = {
+        "market": {
+            "valuation_date": "2024-06-14",
+            "spot": 11750.0,
+            "rate": 0.025,
+            "volatility": 0.22,
+        },
+        "product": {"type": "american", "strike": 12200, "maturity": "3m", "call_put": "call"},
+        "engine": {"method": "mc", "params": {"n_paths": 3000, "seed": 7}},
+        "output": {"fields": ["pv"], "deterministic": True, "seed": 7},
+    }
+    spec = normalize_spec(raw)
+    assert spec["product"]["type"] == "vanilla.european"
+    assert spec["product"]["params"]["exercise"] == "american"
+    result = dk.price(spec)
+    assert result.pv > 0
+
+
 def test_normalize_underlyings_dict_and_name():
     raw = {
         "market": {

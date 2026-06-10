@@ -92,8 +92,9 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "function": {
             "name": "price_tushare_vanilla",
             "description": (
-                "Preferred: fetch Tushare spot and price a European vanilla option in one step. "
-                "Use this instead of manually building price_from_spec."
+                "Preferred: fetch Tushare spot and price a vanilla option in one step. "
+                "Use exercise=american with engine=mc|tree|fdm for American options. "
+                "Product type is always vanilla.european in DSL; exercise sets the style."
             ),
             "parameters": {
                 "type": "object",
@@ -103,6 +104,11 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "strike": {"type": "number"},
                     "maturity": {"type": "string", "default": "3m"},
                     "call_put": {"type": "string", "enum": ["call", "put"], "default": "call"},
+                    "exercise": {
+                        "type": "string",
+                        "enum": ["european", "american"],
+                        "default": "european",
+                    },
                     "volatility": {"type": "number", "default": 0.22},
                     "rate": {"type": "number", "default": 0.025},
                     "engine": {"type": "string", "default": "analytic"},
@@ -352,8 +358,10 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "function": {
             "name": "price_from_spec",
             "description": (
-                "Advanced inline DSL spec. Use product.type=vanilla.european; "
-                "market needs valuation_date and underlyings[].id."
+                "Advanced inline DSL spec. Canonical types: vanilla.european (set params.exercise "
+                "for american|european), snowball.standard, asian.geometric|arithmetic, "
+                "barrier.up_and_out|down_and_in, digital.cash, phoenix.standard, fcn.standard. "
+                "Aliases like american or snowball are auto-normalized."
             ),
             "parameters": {
                 "type": "object",
@@ -624,6 +632,7 @@ class ToolRegistry:
         strike: float,
         maturity: str = "3m",
         call_put: str = "call",
+        exercise: str = "european",
         volatility: float = 0.22,
         rate: float = 0.025,
         engine: str = "analytic",
@@ -642,6 +651,7 @@ class ToolRegistry:
             strike=strike,
             maturity=maturity,
             call_put=call_put,
+            exercise=exercise,
             rate=rate,
             volatility=volatility,
             engine=engine,

@@ -11,6 +11,7 @@ import yaml
 from pydantic import ValidationError
 
 from derivkit.api.errors import DslValidationError
+from derivkit.dsl.product_normalize import canonicalize_product
 from derivkit.dsl.schema import PricingSpec
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ def load_spec(source: str | Path | dict[str, Any]) -> PricingSpec:
         DslValidationError: On schema validation failure with field paths.
     """
     if isinstance(source, dict):
-        raw = source
+        raw = dict(source)
     else:
         path = Path(source)
         text = path.read_text(encoding="utf-8")
@@ -61,6 +62,9 @@ def load_spec(source: str | Path | dict[str, Any]) -> PricingSpec:
         else:
             raise ValueError(f"Unsupported file format: {path.suffix}")
         _resolve_spot_paths(raw, path.parent)
+
+    if isinstance(raw.get("product"), dict):
+        raw["product"] = canonicalize_product(raw["product"])
 
     try:
         return PricingSpec.model_validate(raw)

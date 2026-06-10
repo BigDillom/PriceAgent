@@ -30,7 +30,13 @@ resolving this when needed:
    later runs reuse the mapping without extra API calls.
 4. Standard opt_code is OP+<futures_ts_code> unless list_tushare_options shows otherwise.
 
-When asked to price a European vanilla option with Tushare data:
+DSL product types (aliases like american/snowball/asian are auto-normalized):
+- Vanilla: product.type=vanilla.european + params.exercise=european|american
+- Snowball: snowball.standard | Phoenix: phoenix.standard | FCN: fcn.standard
+- Asian: asian.geometric | asian.arithmetic | Barrier: barrier.up_and_out | digital.cash
+American vanilla requires engine mc, tree, or fdm (not analytic).
+
+When asked to price a vanilla option with Tushare data:
 - Implied vol: calibrate_volatility(method=implied, ...) with strike; omit market_price to
   auto-fetch option settle/close, then price_tushare_vanilla with volatility=<calibrated value>.
 - Historical vol: calibrate_volatility(method=historical, symbol=LH2609, lookback_days=90).

@@ -12,6 +12,7 @@ from derivkit.core.rng import set_seed
 from derivkit.data.calibration import historical_volatility, implied_volatility
 from derivkit.data.market_env import MarketEnv
 from derivkit.data.series_loader import load_series_for_calibration
+from derivkit.dsl.product_normalize import resolve_product_alias
 from derivkit.dsl.schema import CalibrationSpec, PricingSpec
 from derivkit.pricing.engines import create_engine
 from derivkit.pricing.engines.analytic_asian import AnalyticAsianEngine
@@ -57,6 +58,10 @@ def build_product(spec: PricingSpec, env: MarketEnv | None = None) -> ProductTyp
     params = spec.product.params
     uid = spec.market.underlyings[0].id
     raw = params.model_dump(exclude_none=True)
+    canonical, alias_defaults = resolve_product_alias(ptype)
+    ptype = canonical
+    for key, value in alias_defaults.items():
+        raw.setdefault(key, value)
 
     if ptype in ("vanilla.european", "vanilla"):
         return EuropeanVanilla(

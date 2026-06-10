@@ -4,14 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-PRODUCT_TYPE_ALIASES: dict[str, tuple[str, str | None]] = {
-    "european_call": ("vanilla.european", "call"),
-    "european_put": ("vanilla.european", "put"),
-    "vanilla_call": ("vanilla.european", "call"),
-    "vanilla_put": ("vanilla.european", "put"),
-    "call": ("vanilla.european", "call"),
-    "put": ("vanilla.european", "put"),
-}
+from derivkit.dsl.product_normalize import canonicalize_product
 
 
 def build_vanilla_spec(
@@ -22,12 +15,13 @@ def build_vanilla_spec(
     strike: float,
     maturity: str = "3m",
     call_put: str = "call",
+    exercise: str = "european",
     rate: float = 0.025,
     volatility: float = 0.22,
     asset_class: str = "commodity",
     engine: str = "analytic",
 ) -> dict[str, Any]:
-    """Build a valid PricingSpec dict for a European vanilla option."""
+    """Build a valid PricingSpec dict for a vanilla option (European or American)."""
     return {
         "task": "price",
         "market": {
@@ -60,6 +54,7 @@ def build_vanilla_spec(
                 "strike": float(strike),
                 "maturity": maturity,
                 "call_put": call_put,
+                "exercise": exercise,
             },
         },
         "engine": {"method": engine},
@@ -153,24 +148,8 @@ def normalize_spec(spec: dict[str, Any]) -> dict[str, Any]:
     out["market"] = market
 
     product = dict(out.get("product") or {})
-    ptype = str(product.get("type", "vanilla.european")).lower()
-    params = dict(product.get("params") or {})
-
-    # product fields at product top level
-    for key in ("strike", "maturity", "call_put"):
-        if key in product and key not in params:
-            params[key] = product.pop(key)
-
-    if ptype in PRODUCT_TYPE_ALIASES:
-        canonical, cp = PRODUCT_TYPE_ALIASES[ptype]
-        product["type"] = canonical
-        if cp:
-            params.setdefault("call_put", cp)
-    else:
-        product["type"] = ptype
-
-    product["params"] = params
-    out["product"] = product
+    if product:
+        out["product"] = canonicalize_product(product)
 
     engine = out.get("engine")
     if isinstance(engine, str):
