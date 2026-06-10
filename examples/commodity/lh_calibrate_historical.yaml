@@ -1,0 +1,27 @@
+task: calibrate
+market:
+  valuation_date: "2024-06-14"
+  calendar: CN
+  underlyings:
+    - id: LH2409
+      asset_class: commodity
+      spot:
+        source: csv
+        path: data/lh2409.csv
+        field: close
+        tz: Asia/Shanghai
+        session_close: "23:00"
+        align_policy: nearest_available
+  rates:
+    - id: CNY_RF
+      kind: constant
+      value: 0.025
+calibration:
+  method: historical
+  underlying_id: LH2409
+  window: 4
+  annualization: 243
+  field: close
+output:
+  fields: [pv]
+  deterministic: true

@@ -1,0 +1,13 @@
+# Runtime-only dependencies for Harbor/QFbench containers.
+# Pinned 2026-06-09; see requirements-lock.txt for full dev environment.
+numpy==2.4.6
+scipy==1.17.1
+pandas==3.0.3
+pydantic==2.13.4
+pydantic_core==2.46.4
+PyYAML==6.0.3
+numba==0.65.1
+llvmlite==0.47.0
+python-dateutil==2.9.0.post0
+annotated-types==0.7.0
+typing_extensions==4.15.0

@@ -1,0 +1,25 @@
+task: calibrate
+market:
+  valuation_date: "2024-06-14"
+  calendar: CN
+  underlyings:
+    - id: LH2409
+      asset_class: commodity
+      spot: 15520.0
+  rates:
+    - id: CNY_RF
+      kind: constant
+      value: 0.025
+product:
+  type: vanilla.european
+  params:
+    strike: 15500
+    maturity: 3m
+    call_put: call
+calibration:
+  method: implied
+  underlying_id: LH2409
+  market_price: 738.05
+output:
+  fields: [pv]
+  deterministic: true

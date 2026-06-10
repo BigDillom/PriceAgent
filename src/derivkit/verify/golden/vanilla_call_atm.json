@@ -1,0 +1,19 @@
+{
+  "description": "ATM European call, S=K=100, r=5%, sigma=20%, T=1y",
+  "spec": {
+    "task": "price",
+    "market": {
+      "valuation_date": "2024-01-05",
+      "underlyings": [{"id": "SPX", "asset_class": "index", "spot": 100.0}],
+      "rates": [{"id": "USD_RF", "kind": "constant", "value": 0.05}],
+      "vols": [{"id": "SPX", "kind": "constant", "value": 0.2, "underlying_id": "SPX"}]
+    },
+    "product": {
+      "type": "vanilla.european",
+      "params": {"strike": 100, "maturity": "1y", "call_put": "call"}
+    },
+    "engine": {"method": "analytic"}
+  },
+  "pv": 10.4506,
+  "tolerance": 0.01
+}

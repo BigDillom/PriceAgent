@@ -1,0 +1,13 @@
+{
+  "description": "ATM up-and-out call, S=K=100, barrier=120, rebate=1",
+  "params": {
+    "strike": 100,
+    "barrier": 120,
+    "rebate": 1.0,
+    "maturity": 1.0,
+    "call_put": "call",
+    "barrier_type": "up_and_out"
+  },
+  "pv": 1.5787278529531446,
+  "tolerance": 0.01
+}

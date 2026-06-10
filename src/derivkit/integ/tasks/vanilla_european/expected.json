@@ -1,0 +1,8 @@
+{
+  "description": "ATM European call, S=K=100, r=5%, sigma=20%, T=1y",
+  "fields": ["pv"],
+  "pv": 10.450583572185565,
+  "tolerance": {
+    "pv": 0.01
+  }
+}

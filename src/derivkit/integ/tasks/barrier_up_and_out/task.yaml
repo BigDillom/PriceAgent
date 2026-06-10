@@ -1,0 +1,35 @@
+task: price
+market:
+  valuation_date: "2024-01-05"
+  underlyings:
+    - id: SPX
+      asset_class: index
+      spot: 100.0
+  rates:
+    - id: USD_RF
+      kind: constant
+      value: 0.05
+      day_count: ACT/365
+      compounding: continuous
+  vols:
+    - id: SPX_IV
+      kind: constant
+      value: 0.2
+      underlying_id: SPX
+product:
+  type: barrier.up_and_out
+  params:
+    strike: 100
+    barrier: 120
+    rebate: 1.0
+    maturity: 1y
+    call_put: call
+    barrier_type: up_and_out
+engine:
+  method: analytic
+output:
+  fields: [pv]
+  tolerance:
+    pv: 0.01
+  deterministic: true
+  seed: 42

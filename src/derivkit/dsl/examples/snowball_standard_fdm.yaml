@@ -1,0 +1,38 @@
+# Same snowball terms as snowball_standard.yaml; FDM engine for fast deterministic pricing.
+task: price
+market:
+  valuation_date: "2024-01-05"
+  underlyings:
+    - id: CSI1000
+      asset_class: index
+      spot: 100.0
+  rates:
+    - id: CN_RF
+      kind: constant
+      value: 0.05
+      day_count: ACT/365
+      compounding: continuous
+  vols:
+    - id: CSI1000
+      kind: constant
+      value: 0.2
+      underlying_id: CSI1000
+product:
+  type: snowball.standard
+  params:
+    s0: 100
+    barrier_out: 103
+    barrier_in: 80
+    coupon_out: 0.113
+    maturity: 1y
+    lock_term: 3m
+engine:
+  method: fdm
+  params:
+    s_step: 200
+output:
+  fields: [pv]
+  tolerance:
+    pv: 1.0e-2
+  deterministic: true
+  seed: 0

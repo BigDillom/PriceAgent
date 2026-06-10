@@ -1,0 +1,17 @@
+[task]
+name = "snowball_standard_pricing"
+version = "1.0"
+category = "derivatives"
+difficulty = "medium"
+
+[environment]
+python = "3.10"
+packages = ["derivkit", "numpy", "scipy", "pandas", "pydantic", "PyYAML", "numba"]
+
+[output]
+path = "/app/output"
+format = "json"
+
+[grading]
+tolerance_pv = 1.0
+fields = ["pv"]

@@ -1,0 +1,12 @@
+{
+  "description": "ATM geometric-average Asian call, full-life averaging",
+  "params": {
+    "strike": 100,
+    "maturity": 1.0,
+    "call_put": "call",
+    "ave_method": "geometric",
+    "substitute": "underlying"
+  },
+  "pv": 5.546818633789201,
+  "tolerance": 0.01
+}

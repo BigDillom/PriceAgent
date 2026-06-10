@@ -1,0 +1,37 @@
+task: price
+market:
+  valuation_date: "2024-06-14"
+  calendar: CN
+  underlyings:
+    - id: LH2409
+      asset_class: commodity
+      spot:
+        source: csv
+        path: data/lh2409.csv
+        field: close
+        tz: Asia/Shanghai
+        session_close: "23:00"
+        align_policy: nearest_available
+  rates:
+    - id: CNY_RF
+      kind: constant
+      value: 0.025
+  vols:
+    - id: LH_IV
+      kind: constant
+      value: 0.22
+      underlying_id: LH2409
+product:
+  type: vanilla.european
+  params:
+    strike: 15500
+    maturity: 3m
+    call_put: call
+engine:
+  method: analytic
+output:
+  fields: [pv]
+  tolerance:
+    pv: 1.0e-2
+  deterministic: true
+  seed: 0

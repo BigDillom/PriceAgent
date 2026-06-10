@@ -1,0 +1,8 @@
+{
+  "description": "Standard snowball, MC 100k paths, seed=42",
+  "fields": ["pv"],
+  "pv": 98.24277358509133,
+  "tolerance": {
+    "pv": 1.0
+  }
+}

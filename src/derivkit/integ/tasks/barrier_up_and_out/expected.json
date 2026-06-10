@@ -1,0 +1,8 @@
+{
+  "description": "ATM up-and-out call, S=K=100, barrier=120, rebate=1",
+  "fields": ["pv"],
+  "pv": 1.5787278529531446,
+  "tolerance": {
+    "pv": 0.01
+  }
+}

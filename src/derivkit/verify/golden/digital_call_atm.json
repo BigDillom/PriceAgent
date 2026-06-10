@@ -1,0 +1,12 @@
+{
+  "description": "ATM European cash-or-nothing call, rebate=10",
+  "params": {
+    "strike": 100,
+    "rebate": 10.0,
+    "maturity": 1.0,
+    "call_put": "call",
+    "exercise": "european"
+  },
+  "pv": 5.323248154537634,
+  "tolerance": 0.01
+}
