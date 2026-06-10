@@ -7,7 +7,7 @@ DerivKit sits between large language model agents and low-level numerical comput
 ## Features
 
 - **Data Governance (`derivkit.data`)**: Cross-asset alignment, term structures, volatility models, calendars
-- **Modeling & Solving (`derivkit.pricing`)**: Multiple pricing engines (analytic, tree, FDM, MC, quadrature)
+- **Modeling & Solving (`derivkit.pricing`)**: Multiple pricing engines (analytic, tree, FDM, MC, quadrature) — see [docs/PRICING_ENGINES.md](docs/PRICING_ENGINES.md)
 - **Agent API (`derivkit.api`)**: High-level `price()`, `risk()`, `calibrate()` functions
 - **Controlled DSL**: Pydantic-validated YAML/JSON configuration
 - **Output Contracts**: Explicit field definitions with numerical tolerances
@@ -56,7 +56,7 @@ result = dk.price("src/derivkit/dsl/examples/snowball_standard.yaml")
 result = dk.price("src/derivkit/dsl/examples/barrier_up_and_out.yaml")
 ```
 
-More YAML samples: `src/derivkit/dsl/examples/`. API reference: [docs/API.md](docs/API.md).
+More YAML samples: `src/derivkit/dsl/examples/`. API reference: [docs/API.md](docs/API.md). Pricing engines: [docs/PRICING_ENGINES.md](docs/PRICING_ENGINES.md).
 
 ## PriceAgent (数据接口 + LLM)
 

@@ -32,7 +32,24 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "method": {"type": "string", "enum": ["historical", "implied"]},
                     "symbol": {"type": "string", "description": "Futures symbol, e.g. LH2609"},
                     "valuation_date": {"type": "string"},
-                    "exchange": {"type": "string", "description": "DCE for hog futures"},
+                    "exchange": {
+                        "type": "string",
+                        "description": "Futures exchange suffix for spot/history (DCE, GFE, ...)",
+                    },
+                    "option_exchange": {
+                        "type": "string",
+                        "description": (
+                            "Override Tushare opt_basic/opt_daily exchange; omit to use "
+                            "locally cached futures_exchange→option_exchange mapping"
+                        ),
+                    },
+                    "opt_code": {
+                        "type": "string",
+                        "description": (
+                            "Tushare standard option code, e.g. OPLC2609.GFE; "
+                            "defaults to OP+<futures_ts_code>"
+                        ),
+                    },
                     "lookback_days": {
                         "type": "integer",
                         "description": "Calendar days of Tushare history (default 90)",
@@ -199,10 +216,81 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "list_tushare_option_mappings",
+            "description": (
+                "List locally cached Tushare futures_exchange→option_exchange mappings. "
+                "Check this before probing Tushare when option lookups may need a "
+                "different exchange code than futures."
+            ),
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "save_tushare_option_mapping",
+            "description": (
+                "Cache a verified futures_exchange→option_exchange mapping after "
+                "list_tushare_options confirms it works. Reused automatically on later requests."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "futures_exchange": {
+                        "type": "string",
+                        "description": "Futures ts_code suffix / resolve_exchange value, e.g. GFE",
+                    },
+                    "option_exchange": {
+                        "type": "string",
+                        "description": "opt_basic/opt_daily exchange param that returned data",
+                    },
+                    "note": {"type": "string", "description": "Optional verification note"},
+                },
+                "required": ["futures_exchange", "option_exchange"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_tushare_options",
+            "description": (
+                "Probe Tushare opt_basic to discover option contracts and the correct "
+                "option_exchange when no local mapping exists or lookup failed."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "option_exchange": {
+                        "type": "string",
+                        "description": (
+                            "Tushare opt_basic exchange param: DCE, CZCE, SHFE, INE, GFEX, SSE, ..."
+                        ),
+                    },
+                    "opt_code": {
+                        "type": "string",
+                        "description": "Filter by standard contract code, e.g. OPLC2609.GFE",
+                    },
+                    "call_put": {"type": "string", "enum": ["call", "put"]},
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max sample rows to return (default 20)",
+                        "default": 20,
+                    },
+                },
+                "required": ["option_exchange"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_tushare_option_quote",
             "description": (
                 "Find a nearby listed option on Tushare (opt_basic + opt_daily) and return "
-                "its aligned market price (settle or close) for implied vol calibration."
+                "its aligned market price (settle or close) for implied vol calibration. "
+                "Uses cached exchange mappings when available; pass option_exchange after "
+                "probing with list_tushare_options if needed."
             ),
             "parameters": {
                 "type": "object",
@@ -215,7 +303,18 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "strike": {"type": "number"},
                     "maturity": {"type": "string", "default": "3m"},
                     "call_put": {"type": "string", "enum": ["call", "put"], "default": "call"},
-                    "exchange": {"type": "string", "description": "DCE for hog futures"},
+                    "exchange": {
+                        "type": "string",
+                        "description": "Futures exchange suffix for opt_code resolution (DCE, GFE)",
+                    },
+                    "option_exchange": {
+                        "type": "string",
+                        "description": "Override opt_basic/opt_daily exchange; omit to use local cache",
+                    },
+                    "opt_code": {
+                        "type": "string",
+                        "description": "Standard option code from list_tushare_options, e.g. OPLC2609.GFE",
+                    },
                     "price_field": {
                         "type": "string",
                         "enum": ["settle", "close"],
@@ -283,6 +382,9 @@ class ToolRegistry:
             "get_spot_quote": self._get_spot_quote,
             "load_tushare_series": self._load_tushare_series,
             "get_tushare_spot": self._get_tushare_spot,
+            "list_tushare_option_mappings": self._list_tushare_option_mappings,
+            "save_tushare_option_mapping": self._save_tushare_option_mapping,
+            "list_tushare_options": self._list_tushare_options,
             "get_tushare_option_quote": self._get_tushare_option_quote,
             "calibrate_volatility": self._calibrate_volatility,
             "price_tushare_vanilla": self._price_tushare_vanilla,
@@ -344,6 +446,35 @@ class ToolRegistry:
             exchange=exchange,
         )
 
+    def _list_tushare_option_mappings(self) -> list[dict[str, Any]]:
+        return self.data.list_option_exchange_mappings()
+
+    def _save_tushare_option_mapping(
+        self,
+        futures_exchange: str,
+        option_exchange: str,
+        note: str = "",
+    ) -> dict[str, Any]:
+        return self.data.save_option_exchange_mapping(
+            futures_exchange,
+            option_exchange,
+            note=note,
+        )
+
+    def _list_tushare_options(
+        self,
+        option_exchange: str,
+        opt_code: str | None = None,
+        call_put: str | None = None,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        return self.data.list_tushare_options(
+            option_exchange,
+            opt_code=opt_code,
+            call_put=call_put,
+            limit=limit,
+        )
+
     def _get_tushare_option_quote(
         self,
         symbol: str,
@@ -352,6 +483,8 @@ class ToolRegistry:
         maturity: str = "3m",
         call_put: str = "call",
         exchange: str | None = None,
+        option_exchange: str | None = None,
+        opt_code: str | None = None,
         price_field: str = "settle",
     ) -> dict[str, Any]:
         return self.data.get_tushare_option_quote(
@@ -361,6 +494,8 @@ class ToolRegistry:
             maturity=maturity,
             call_put=call_put,
             exchange=exchange,
+            option_exchange=option_exchange,
+            opt_code=opt_code,
             price_field=price_field,
         )
 
@@ -374,6 +509,8 @@ class ToolRegistry:
         annualization: float = 243.0,
         lookback_days: int = 90,
         exchange: str | None = None,
+        option_exchange: str | None = None,
+        opt_code: str | None = None,
         market_price: float | None = None,
         strike: float | None = None,
         maturity: str = "3m",
@@ -395,6 +532,8 @@ class ToolRegistry:
                 maturity=maturity,
                 call_put=call_put,
                 exchange=exchange,
+                option_exchange=option_exchange,
+                opt_code=opt_code,
                 price_field=price_field,
             )
             market_price = option_quote["market_price"]

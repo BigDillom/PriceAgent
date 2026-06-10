@@ -387,6 +387,231 @@ def test_calibrate_volatility_implied_auto_fetch_mocked():
 
 
 @pytest.mark.integration
+def test_list_tushare_options_mocked():
+    import pandas as pd
+
+    basic_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "LC2609-C-244000.GFE",
+                "name": "碳酸锂期权2609C244000",
+                "opt_code": "OPLC2609.GFE",
+                "call_put": "C",
+                "exercise_price": 244000.0,
+                "maturity_date": "20260807",
+                "exchange": "GFEX",
+            },
+        ]
+    )
+
+    class FakeClient:
+        def fetch_option_basic(self, exchange, *, opt_code=None, call_put=None):
+            assert exchange == "GFEX"
+            assert opt_code == "OPLC2609.GFE"
+            return basic_df
+
+    reg = ToolRegistry(DataService(tushare_client=FakeClient()))
+    out = reg.execute(
+        "list_tushare_options",
+        {
+            "option_exchange": "GFEX",
+            "opt_code": "OPLC2609.GFE",
+            "call_put": "call",
+        },
+    )
+    assert out["count"] == 1
+    assert out["contracts"][0]["ts_code"] == "LC2609-C-244000.GFE"
+    assert "OPLC2609.GFE" in out["unique_opt_codes"]
+
+
+@pytest.mark.integration
+def test_get_tushare_option_quote_uses_cached_option_exchange_mocked(tmp_path):
+    import pandas as pd
+
+    from priceagent.option_exchange_store import OptionExchangeStore
+
+    basic_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "LC2609-C-244000.GFE",
+                "name": "碳酸锂期权2609C244000",
+                "opt_code": "OPLC2609.GFE",
+                "call_put": "C",
+                "exercise_price": 244000.0,
+                "maturity_date": "20260807",
+            },
+        ]
+    )
+    daily_df = pd.DataFrame(
+        {
+            "trade_date": ["20260608"],
+            "open": [900.0],
+            "high": [950.0],
+            "low": [850.0],
+            "close": [920.0],
+            "settle": [910.0],
+            "vol": [200],
+            "oi": [1500],
+        }
+    )
+
+    class FakeClient:
+        def fetch_option_basic(self, exchange, *, opt_code=None, call_put=None):
+            assert exchange == "GFEX"
+            return basic_df
+
+        def fetch_option_daily(self, ts_code, start, end, *, exchange=None):
+            assert exchange == "GFEX"
+            out = pd.DataFrame(
+                {
+                    "datetime": pd.to_datetime(daily_df["trade_date"], format="%Y%m%d"),
+                    "open": daily_df["open"],
+                    "high": daily_df["high"],
+                    "low": daily_df["low"],
+                    "close": daily_df["close"],
+                    "settle": daily_df["settle"],
+                    "volume": daily_df["vol"],
+                    "oi": daily_df["oi"],
+                }
+            )
+            out["ts_code"] = ts_code
+            return out
+
+        def default_date_window(self, valuation_date, lookback_days=60):
+            return "2026-05-01", valuation_date
+
+    defaults = tmp_path / "defaults.json"
+    defaults.write_text(
+        '{"GFE": {"option_exchange": "GFEX", "verified_by": "test"}}',
+        encoding="utf-8",
+    )
+    store = OptionExchangeStore(defaults_path=defaults, user_path=tmp_path / "user.json")
+    reg = ToolRegistry(
+        DataService(tushare_client=FakeClient(), option_exchange_store=store)
+    )
+    quote = reg.execute(
+        "get_tushare_option_quote",
+        {
+            "symbol": "LC2609",
+            "valuation_date": "2026-06-08",
+            "strike": 244000,
+            "maturity": "3m",
+            "call_put": "call",
+        },
+    )
+    assert quote["option_exchange"] == "GFEX"
+    assert quote["option_exchange_source"] == "cache"
+    assert quote["market_price"] == 910.0
+
+
+@pytest.mark.integration
+def test_save_tushare_option_mapping_tool(tmp_path):
+    from priceagent.option_exchange_store import OptionExchangeStore
+
+    store = OptionExchangeStore(
+        defaults_path=tmp_path / "defaults.json",
+        user_path=tmp_path / "user.json",
+    )
+    reg = ToolRegistry(DataService(option_exchange_store=store))
+    saved = reg.execute(
+        "save_tushare_option_mapping",
+        {
+            "futures_exchange": "SHF",
+            "option_exchange": "SHFE",
+            "note": "probe ok",
+        },
+    )
+    assert saved["option_exchange"] == "SHFE"
+    mappings = reg.execute("list_tushare_option_mappings", {})
+    assert any(m["futures_exchange"] == "SHF" and m["option_exchange"] == "SHFE" for m in mappings)
+
+
+@pytest.mark.integration
+def test_get_tushare_option_quote_with_option_exchange_mocked(tmp_path):
+    import pandas as pd
+
+    from priceagent.option_exchange_store import OptionExchangeStore
+
+    basic_df = pd.DataFrame(
+        [
+            {
+                "ts_code": "LC2609-C-244000.GFE",
+                "name": "碳酸锂期权2609C244000",
+                "opt_code": "OPLC2609.GFE",
+                "call_put": "C",
+                "exercise_price": 244000.0,
+                "maturity_date": "20260807",
+            },
+        ]
+    )
+    daily_df = pd.DataFrame(
+        {
+            "trade_date": ["20260608"],
+            "open": [900.0],
+            "high": [950.0],
+            "low": [850.0],
+            "close": [920.0],
+            "settle": [910.0],
+            "vol": [200],
+            "oi": [1500],
+        }
+    )
+
+    class FakeClient:
+        def fetch_option_basic(self, exchange, *, opt_code=None, call_put=None):
+            assert exchange == "GFEX"
+            assert opt_code == "OPLC2609.GFE"
+            return basic_df
+
+        def fetch_option_daily(self, ts_code, start, end, *, exchange=None):
+            assert exchange == "GFEX"
+            out = pd.DataFrame(
+                {
+                    "datetime": pd.to_datetime(daily_df["trade_date"], format="%Y%m%d"),
+                    "open": daily_df["open"],
+                    "high": daily_df["high"],
+                    "low": daily_df["low"],
+                    "close": daily_df["close"],
+                    "settle": daily_df["settle"],
+                    "volume": daily_df["vol"],
+                    "oi": daily_df["oi"],
+                }
+            )
+            out["ts_code"] = ts_code
+            return out
+
+        def default_date_window(self, valuation_date, lookback_days=60):
+            return "2026-05-01", valuation_date
+
+    store = OptionExchangeStore(
+        defaults_path=tmp_path / "defaults.json",
+        user_path=tmp_path / "user.json",
+    )
+    reg = ToolRegistry(
+        DataService(tushare_client=FakeClient(), option_exchange_store=store)
+    )
+    quote = reg.execute(
+        "get_tushare_option_quote",
+        {
+            "symbol": "LC2609",
+            "valuation_date": "2026-06-08",
+            "strike": 244000,
+            "maturity": "3m",
+            "call_put": "call",
+            "exchange": "GFE",
+            "option_exchange": "GFEX",
+            "opt_code": "OPLC2609.GFE",
+        },
+    )
+    assert quote["option_exchange"] == "GFEX"
+    assert quote["option_exchange_source"] == "explicit"
+    assert store.get_entry("GFE") is not None
+    assert quote["exchange"] == "GFE"
+    assert quote["market_price"] == 910.0
+    assert quote["matched_contract"]["ts_code"] == "LC2609-C-244000.GFE"
+
+
+@pytest.mark.integration
 def test_run_agent_mocked_llm():
     reg = ToolRegistry()
 

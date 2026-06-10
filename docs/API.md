@@ -53,6 +53,20 @@ result = dk.price("src/derivkit/dsl/examples/snowball_standard.yaml")
 
 See `src/derivkit/dsl/examples/` for complete YAML samples.
 
+### Pricing engines (`engine.method`)
+
+Full guide (Chinese): **[PRICING_ENGINES.md](PRICING_ENGINES.md)**.
+
+| Method | Idea | Typical use |
+|--------|------|-------------|
+| `analytic` | Closed-form (BSM for European vanillas) | Fast benchmark; implied-vol parity; arbitrage-style vanilla quotes |
+| `tree` | Binomial/trinomial lattice | American exercise; vanilla cross-check |
+| `fdm` | PDE finite differences | American vanillas; snowball (`FdmSnowballEngine`) |
+| `mc` | Monte Carlo paths | Path-dependent products (snowball, phoenix, FCN) |
+| `quad` | Numerical / FFT quadrature | Snowball, FCN; cross-check vs MC |
+
+`calibrate(method=implied)` inverts the same BSM model used by `analytic`. For structured products without market quotes, prefer `mc` / `fdm` / `quad` and use `derivkit.verify.oracle.cross_check` for multi-engine validation.
+
 ## `risk(spec) → PricingResult`
 
 Same as `price()` but ensures greeks (`delta`, `gamma`, `vega`, `theta`, `rho`) are included in the output.

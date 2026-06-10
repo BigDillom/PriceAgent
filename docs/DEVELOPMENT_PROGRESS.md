@@ -63,6 +63,8 @@
 
 ### L2b `derivkit.pricing` — 🔄 60%
 
+引擎选用与业务场景说明见 **[PRICING_ENGINES.md](PRICING_ENGINES.md)**（analytic / tree / fdm / mc / quad，套利 vs 新产品定价）。
+
 | 组件 | 状态 | 备注 |
 |------|------|------|
 | 香草 `EuropeanVanilla` | ✅ | |

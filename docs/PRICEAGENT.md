@@ -31,6 +31,8 @@ python -m priceagent list
 
 ## LLM Agent 模式
 
+香草期权 demo 默认走 **analytic（BSM 闭式解）** 引擎；与 `calibrate_volatility(method=implied)` 使用同一模型，适合套利式「市价 → IV → 模型价」链路。引擎说明见 [PRICING_ENGINES.md](PRICING_ENGINES.md)。
+
 ```bash
 python -m priceagent run "用 lh2409 数据，对 2024-06-14 的生猪看涨期权做 analytic 定价，并说明对齐后的 spot"
 ```

@@ -1,0 +1,14 @@
+{
+  "DCE": {
+    "option_exchange": "DCE",
+    "verified_at": "2026-06-10",
+    "verified_by": "defaults",
+    "note": "Futures and options share the same Tushare exchange code"
+  },
+  "GFE": {
+    "option_exchange": "GFEX",
+    "verified_at": "2026-06-10",
+    "verified_by": "defaults",
+    "note": "GFEX futures use .GFE suffix; opt_basic/opt_daily use exchange=GFEX"
+  }
+}

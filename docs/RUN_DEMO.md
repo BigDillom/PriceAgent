@@ -146,6 +146,12 @@ print(svc.get_tushare_option_quote(
 
 ## 5. 演示 C：DeepSeek Agent 全自动定价
 
+### 关于 `analytic` 引擎
+
+演示中常出现「用 **analytic** 引擎定价」：即对**欧式香草期权**使用 **BSM 闭式公式**直接计算 PV/Delta（毫秒级、无模拟）。隐含波动率反解（`calibrate(implied)`）与 analytic 定价共用同一 BSM 模型，适合**套利定价**（与市场期权价对齐）。
+
+结构化新产品（雪球、FCN 等）无闭式解，需用 `mc` / `fdm` / `quad`；五种方法的说明与选用见 **[PRICING_ENGINES.md](PRICING_ENGINES.md)**。
+
 配置好 `.env` 后，用自然语言驱动 Agent：
 
 ```bash

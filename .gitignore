@@ -23,6 +23,9 @@ benchmarks/report.json
 .env
 .env.local
 
+# Agent-learned Tushare option exchange mappings (defaults ship in package)
+.priceagent/
+
 # IDE / OS
 .idea/
 .vscode/

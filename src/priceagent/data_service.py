@@ -15,6 +15,7 @@ from derivkit.data.adapters import commodity, equity
 from derivkit.data.adapters.base import series_summary
 from derivkit.data.alignment import align_spot_to_valuation, build_valuation_datetime
 from derivkit.data.tushare_loader import resolve_exchange, resolve_option_opt_code
+from priceagent.option_exchange_store import OptionExchangeStore
 from priceagent.option_lookup import find_nearby_option_contract
 from priceagent.tushare_client import TushareClient, resolve_ts_code
 
@@ -88,10 +89,12 @@ class DataService:
         self,
         examples_root: Path | None = None,
         tushare_client: TushareClient | None = None,
+        option_exchange_store: OptionExchangeStore | None = None,
     ) -> None:
         self.examples_root = examples_root or DEFAULT_EXAMPLES
         self._datasets = {d.id: d for d in BUILTIN_DATASETS}
         self._tushare = tushare_client
+        self._option_store = option_exchange_store or OptionExchangeStore()
 
     def list_datasets(self) -> list[dict[str, Any]]:
         """List built-in CSV datasets available for pricing demos."""
@@ -279,6 +282,89 @@ class DataService:
             "alignment": record.to_dict(),
         }
 
+    def list_tushare_options(
+        self,
+        option_exchange: str,
+        *,
+        opt_code: str | None = None,
+        call_put: str | None = None,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        """List option contracts from Tushare opt_basic for discovery before quoting."""
+        limit = max(1, min(limit, 100))
+        try:
+            contracts = self.tushare.fetch_option_basic(
+                option_exchange,
+                opt_code=opt_code,
+                call_put=call_put,
+            )
+        except ValueError as exc:
+            return {
+                "option_exchange": option_exchange.upper(),
+                "opt_code": opt_code,
+                "call_put": call_put,
+                "count": 0,
+                "contracts": [],
+                "unique_opt_codes": [],
+                "error": str(exc),
+                "hint": (
+                    "opt_basic returned no rows. Futures and options may use different Tushare "
+                    "exchange codes. Try alternate option_exchange values, or opt_code=OP+<futures_ts_code>. "
+                    "After a successful probe, call save_tushare_option_mapping to cache the mapping."
+                ),
+            }
+
+        cols = [
+            c
+            for c in (
+                "ts_code",
+                "name",
+                "opt_code",
+                "call_put",
+                "exercise_price",
+                "maturity_date",
+                "exchange",
+            )
+            if c in contracts.columns
+        ]
+        sample = contracts[cols].head(limit)
+        unique_opt_codes: list[str] = []
+        if "opt_code" in contracts.columns:
+            unique_opt_codes = sorted(contracts["opt_code"].astype(str).unique().tolist())[:30]
+
+        return {
+            "option_exchange": option_exchange.upper(),
+            "opt_code": opt_code,
+            "call_put": call_put,
+            "count": len(contracts),
+            "contracts": sample.to_dict(orient="records"),
+            "unique_opt_codes": unique_opt_codes,
+            "hint": (
+                "Pass option_exchange into get_tushare_option_quote or "
+                "calibrate_volatility(method=implied), then save_tushare_option_mapping "
+                "so the verified futures_exchange→option_exchange pair is cached locally."
+            ),
+        }
+
+    def list_option_exchange_mappings(self) -> list[dict[str, Any]]:
+        """Return locally cached futures_exchange → option_exchange mappings."""
+        return self._option_store.list_mappings()
+
+    def save_option_exchange_mapping(
+        self,
+        futures_exchange: str,
+        option_exchange: str,
+        *,
+        note: str = "",
+    ) -> dict[str, Any]:
+        """Persist a verified mapping for reuse on later option data requests."""
+        return self._option_store.save(
+            futures_exchange,
+            option_exchange,
+            note=note,
+            verified_by="agent",
+        )
+
     def get_tushare_option_quote(
         self,
         valuation_date: str,
@@ -288,6 +374,8 @@ class DataService:
         maturity: str = "3m",
         call_put: str = "call",
         exchange: str | None = None,
+        option_exchange: str | None = None,
+        opt_code: str | None = None,
         price_field: str = "settle",
         session_close: str = "15:00",
         tz: str = "Asia/Shanghai",
@@ -297,9 +385,26 @@ class DataService:
         if price_field not in ("settle", "close"):
             raise ValueError("price_field must be 'settle' or 'close'")
 
-        ex = resolve_exchange(symbol, exchange)
-        opt_code = resolve_option_opt_code(symbol, exchange)
-        contracts = self.tushare.fetch_option_basic(ex, opt_code=opt_code, call_put=call_put)
+        futures_exchange = resolve_exchange(symbol, exchange)
+        resolved_opt_code = opt_code or resolve_option_opt_code(symbol, exchange)
+        option_ex, option_ex_source = self._option_store.resolve(
+            futures_exchange,
+            option_exchange,
+        )
+        try:
+            contracts = self.tushare.fetch_option_basic(
+                option_ex,
+                opt_code=resolved_opt_code,
+                call_put=call_put,
+            )
+        except ValueError as exc:
+            if option_ex_source == "fallback":
+                raise ValueError(
+                    f"{exc} No cached option_exchange mapping for futures exchange "
+                    f"{futures_exchange}. Use list_tushare_options to probe opt_basic, then "
+                    "save_tushare_option_mapping or pass option_exchange explicitly."
+                ) from exc
+            raise
         match = find_nearby_option_contract(
             contracts,
             valuation_date=valuation_date,
@@ -311,7 +416,7 @@ class DataService:
 
         ts_code = match["ts_code"]
         start, end = self.tushare.default_date_window(valuation_date, lookback_days=30)
-        df = self.tushare.fetch_option_daily(ts_code, start, end, exchange=ex)
+        df = self.tushare.fetch_option_daily(ts_code, start, end, exchange=option_ex)
         df = df.set_index("datetime")
 
         val_date = date.fromisoformat(valuation_date[:10])
@@ -327,11 +432,21 @@ class DataService:
             session_close=session_close,
             tz=tz,
         )
+        if option_ex_source == "explicit":
+            self._option_store.save(
+                futures_exchange,
+                option_ex,
+                note=f"verified via {symbol} option quote",
+                verified_by="agent",
+            )
+
         return {
             "valuation_date": valuation_date,
             "underlying_symbol": symbol,
-            "exchange": ex,
-            "opt_code": opt_code,
+            "exchange": futures_exchange,
+            "option_exchange": option_ex,
+            "option_exchange_source": option_ex_source,
+            "opt_code": resolved_opt_code,
             "matched_contract": match,
             "ts_code": ts_code,
             "price_field": price_field,
